@@ -9,3 +9,4 @@ resolver = "2"
 
 [dependencies]
 cgmath = "0.18"
+rand = "0.8.4"
