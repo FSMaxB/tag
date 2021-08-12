@@ -1,6 +1,6 @@
 use crate::id::Id;
 use crate::types::{Degrees, Vector};
-use cgmath::{Angle, Deg, Zero};
+use cgmath::{Angle, Deg, MetricSpace, Zero};
 use rand::Rng;
 
 pub struct Agent {
@@ -21,5 +21,35 @@ impl Agent {
 		let heading = Deg(random_generator.gen_range(Degrees::zero().0..Degrees::full_turn().0));
 
 		Self { id, position, heading }
+	}
+
+	pub fn distance(&self, other: &Agent) -> f64 {
+		self.position.distance(other.position)
+	}
+}
+
+#[cfg(test)]
+mod test {
+	use super::*;
+	use crate::id::IdSource;
+	use cgmath::Vector2;
+
+	#[test]
+	fn should_calculate_distance_between_agents() {
+		let mut id_source = IdSource::default();
+
+		let a = Agent {
+			id: id_source.next().unwrap(),
+			position: Vector::new(1.0, 2.0),
+			heading: Degrees::zero(),
+		};
+
+		let b = Agent {
+			id: id_source.next().unwrap(),
+			position: Vector::new(2.0, 3.0),
+			heading: Degrees::zero(),
+		};
+
+		assert_eq!(2.0f64.sqrt(), a.distance(&b));
 	}
 }
