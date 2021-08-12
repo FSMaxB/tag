@@ -1,4 +1,5 @@
 pub mod agent;
+pub mod behavior;
 pub mod id;
 pub mod types;
 
