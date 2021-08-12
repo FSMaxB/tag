@@ -1,3 +1,4 @@
+use crate::id::Id;
 use static_assertions::assert_obj_safe;
 
 #[derive(Copy, Clone)]
@@ -7,7 +8,7 @@ pub enum Role {
 }
 
 pub trait Behavior {
-	fn perform_step(&mut self, current_role: Role) -> Step;
+	fn perform_step(&mut self, current_role: Role, current_it: Id, previous_it: Id) -> Step;
 }
 
 pub struct Step;
