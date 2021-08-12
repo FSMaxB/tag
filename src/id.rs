@@ -1,23 +1,31 @@
+use std::fmt::{Display, Formatter};
+use std::ops::Index;
+
 #[derive(Clone, Copy)]
 pub struct Id(usize);
 
-#[derive(Default)]
-pub struct IdSource {
-	next_id: usize,
+impl Display for Id {
+	fn fmt(&self, formatter: &mut Formatter<'_>) -> std::fmt::Result {
+		write!(formatter, "Id({})", self.0)
+	}
 }
 
-impl Iterator for IdSource {
-	type Item = Id;
+impl From<usize> for Id {
+	fn from(id: usize) -> Self {
+		Self(id)
+	}
+}
 
-	fn next(&mut self) -> Option<Self::Item> {
-		if self.next_id == usize::MAX {
-			// debatable if this is necessary
-			return None;
-		}
+impl From<Id> for usize {
+	fn from(id: Id) -> Self {
+		id.0
+	}
+}
 
-		let id = self.next_id;
-		self.next_id += 1;
+impl<Element> Index<Id> for Vec<Element> {
+	type Output = Element;
 
-		Some(Id(id))
+	fn index(&self, id: Id) -> &Self::Output {
+		self.index(id.0)
 	}
 }

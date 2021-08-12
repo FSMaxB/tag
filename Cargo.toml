@@ -9,5 +9,5 @@ resolver = "2"
 
 [dependencies]
 cgmath = "0.18"
-rand = "0.8.4"
+rand = {version = "0.8", features = ["small_rng"]}
 static_assertions = "1"

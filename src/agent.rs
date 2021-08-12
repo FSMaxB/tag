@@ -4,8 +4,8 @@ use rand::Rng;
 use std::f64::consts::PI;
 
 pub struct Agent {
-	position: Vector,
-	heading: Radians,
+	pub position: Vector,
+	pub heading: Radians,
 }
 
 impl Agent {
