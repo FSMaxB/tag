@@ -71,8 +71,6 @@ fn main() {
 			// The additional range is because a visual representation of an Agent has a width of Agent::RANGE pixels
 			width: (options.width + 3.0 * Agent::RANGE).round() as f32,
 			height: (options.height + 3.0 * Agent::RANGE).round() as f32,
-			resize_constraints: Default::default(),
-			scale_factor_override: None,
 			title: "Simulation of a game of tag".to_string(),
 			vsync: true,
 			resizable: false,

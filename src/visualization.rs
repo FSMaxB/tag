@@ -3,13 +3,16 @@ use crate::id::Id;
 use crate::types::Vector;
 use crate::world::WorldSnapshot;
 use bevy::app::{EventReader, EventWriter};
-use bevy::asset::{Assets, Handle};
+use bevy::asset::{AssetServer, Assets, Handle};
 use bevy::ecs::prelude::{Commands, Query, Res};
 use bevy::math::{Quat, Vec2, Vec3};
 use bevy::prelude::{
-	Color, GlobalTransform, OrthographicCameraBundle, ResMut, Sprite, SpriteBundle, Transform, UiCameraBundle,
+	Color, GlobalTransform, OrthographicCameraBundle, ResMut, Sprite, SpriteBundle, Text, TextBundle, Transform,
+	UiCameraBundle,
 };
 use bevy::sprite::ColorMaterial;
+use bevy::text::{TextSection, TextStyle};
+use bevy::ui::{AlignSelf, Style};
 
 pub struct Bounds(Vec2);
 
@@ -30,10 +33,30 @@ pub fn setup(
 	mut commands: Commands,
 	initial_snapshot: Res<WorldSnapshot>,
 	mut materials: ResMut<Assets<ColorMaterial>>,
+	asset_server: Res<AssetServer>,
 	bounds: Res<Bounds>,
 ) {
 	commands.spawn_bundle(OrthographicCameraBundle::new_2d());
 	commands.spawn_bundle(UiCameraBundle::default());
+	commands.spawn_bundle(TextBundle {
+		node: Default::default(),
+		style: Style {
+			align_self: AlignSelf::FlexEnd,
+			..Default::default()
+		},
+		text: Text {
+			sections: vec![TextSection {
+				value: format!("Iteration: {}", initial_snapshot.iteration),
+				style: TextStyle {
+					font: asset_server.load("fonts/FiraSans-Bold.ttf"),
+					font_size: 20.0,
+					color: Color::WHITE,
+				},
+			}],
+			..Default::default()
+		},
+		..Default::default()
+	});
 
 	let color_materials = ColorMaterials {
 		regular: materials.add(Color::BLACK.into()),
@@ -82,7 +105,8 @@ pub fn world_update_event_system(
 
 pub fn agent_update_system(
 	mut event_reader: EventReader<WorldSnapshot>,
-	mut query: Query<(&mut Transform, &mut Handle<ColorMaterial>, &Id)>,
+	mut agent_query: Query<(&mut Transform, &mut Handle<ColorMaterial>, &Id)>,
+	mut text_query: Query<&mut Text>,
 	bounds: Res<Bounds>,
 	color_materials: Res<ColorMaterials>,
 ) {
@@ -91,7 +115,11 @@ pub fn agent_update_system(
 		None => return,
 	};
 
-	for (mut transform, mut material, &id) in query.iter_mut() {
+	for mut text in text_query.iter_mut() {
+		text.sections[0].value = format!("Iteration: {}", latest_snapshot.iteration);
+	}
+
+	for (mut transform, mut material, &id) in agent_query.iter_mut() {
 		let agent = &latest_snapshot.agents[id];
 		transform.translation = translation_for_agent(&bounds, agent);
 		transform.rotation = Quat::from_rotation_z(agent.heading.0 as f32);
