@@ -13,6 +13,7 @@ impl Agent {
 	const FIELD_OF_VIEW_ANGLE: Radians = Rad((30.0 / 180.0) * PI);
 	/// How far an agent is allowed to move in one time step.
 	const MAXIMUM_VELOCITY: f64 = 10.0;
+	const RANGE: f64 = 5.0;
 
 	pub fn random(bounds: Vector, random_generator: &mut impl Rng) -> Self {
 		let position = Vector {
@@ -27,6 +28,11 @@ impl Agent {
 	/// How far away is another agent.
 	pub fn distance(&self, other: &Agent) -> f64 {
 		self.position.distance(other.position)
+	}
+
+	/// Can the other agent be reached?
+	pub fn can_reach(&self, other: &Agent) -> bool {
+		self.distance(other) <= Self::RANGE
 	}
 
 	/// At what angle would this agent see the other one based on its current heading.
@@ -44,7 +50,7 @@ impl Agent {
 	}
 
 	/// Does this agent see the other one?
-	pub fn sees(&self, other: &Agent) -> bool {
+	pub fn can_see(&self, other: &Agent) -> bool {
 		self.viewing_angle(other).abs() <= (Self::FIELD_OF_VIEW_ANGLE / 2.0)
 	}
 
@@ -109,7 +115,7 @@ mod test {
 			position: center,
 			heading: Deg(45.0).into(),
 		};
-		assert!(looking_agent.sees(&looking_agent));
+		assert!(looking_agent.can_see(&looking_agent));
 
 		let out_of_view_left = Agent {
 			position: center
@@ -119,7 +125,7 @@ mod test {
 				),
 			heading: Zero::zero(),
 		};
-		assert!(!looking_agent.sees(&out_of_view_left));
+		assert!(!looking_agent.can_see(&out_of_view_left));
 
 		let out_of_view_right = Agent {
 			position: center
@@ -129,13 +135,13 @@ mod test {
 				),
 			heading: Zero::zero(),
 		};
-		assert!(!looking_agent.sees(&out_of_view_right));
+		assert!(!looking_agent.can_see(&out_of_view_right));
 
 		let in_view = Agent {
 			position: center + rotate_by_angle(Vector::unit_x(), looking_agent.heading),
 			heading: Zero::zero(),
 		};
-		assert!(looking_agent.sees(&in_view));
+		assert!(looking_agent.can_see(&in_view));
 	}
 
 	#[test]
