@@ -26,6 +26,10 @@ impl Agent {
 		Self { id, position, heading }
 	}
 
+	fn id(&self) -> Id {
+		self.id
+	}
+
 	/// How far away is another agent.
 	pub fn distance(&self, other: &Agent) -> f64 {
 		self.position.distance(other.position)
