@@ -11,10 +11,10 @@ pub struct Agent {
 
 impl Agent {
 	// TIL: https://github.com/rust-lang/rust/issues/43209, also floating point division is not allowed in const fn
-	pub const FIELD_OF_VIEW_ANGLE: Radians = Rad((30.0 / 180.0) * PI);
+	pub const FIELD_OF_VIEW_ANGLE: Radians = Rad((200.0 / 180.0) * PI);
 	/// How far an agent is allowed to move in one time step.
-	pub const MAXIMUM_VELOCITY: f64 = 10.0;
-	pub const RANGE: f64 = 5.0;
+	pub const MAXIMUM_VELOCITY: f64 = 5.0;
+	pub const RANGE: f64 = 10.0;
 
 	pub fn random(bounds: Vector, random_generator: &mut impl Rng) -> Self {
 		let position = Vector {

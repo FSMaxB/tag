@@ -23,16 +23,16 @@ struct Options {
 	#[structopt(default_value = "10000")]
 	iterations: usize,
 	/// Width of the playing field
-	#[structopt(long, default_value = "200.0")]
+	#[structopt(long, default_value = "500")]
 	width: f64,
 	/// Height of the playing field
-	#[structopt(long, default_value = "200.0")]
+	#[structopt(long, default_value = "500")]
 	height: f64,
 	/// Number of players
 	#[structopt(long, default_value = "20")]
 	agent_count: usize,
 	/// Milliseconds to wait between every iteration
-	#[structopt(long, default_value = "10")]
+	#[structopt(long, default_value = "50")]
 	delay_milliseconds: u64,
 }
 
@@ -45,7 +45,6 @@ fn main() {
 		options.agent_count,
 		&mut rng,
 	);
-	println!("{}", world);
 
 	let (snapshot_sender, snapshot_receiver) = crossbeam::channel::bounded(1);
 	std::thread::spawn({

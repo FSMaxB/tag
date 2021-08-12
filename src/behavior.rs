@@ -2,7 +2,7 @@ use crate::agent::Agent;
 use crate::id::Id;
 use crate::types::Radians;
 use crate::world::WorldView;
-use cgmath::{Angle, Rad, Zero};
+use cgmath::Deg;
 use rand::{thread_rng, Rng};
 use static_assertions::assert_obj_safe;
 
@@ -30,12 +30,13 @@ pub struct DefaultBehavior;
 
 impl Behavior for DefaultBehavior {
 	fn perform_step(&mut self, world_view: &mut WorldView) -> Operation {
-		let random_direction = Rad(thread_rng().gen_range(Radians::zero().0..Radians::full_turn().0));
+		// more likely to go right
+		let random_angle = Radians::from(Deg(10.0)) * (thread_rng().gen_range(-1i8..=2) as f64);
 
 		if world_view.our_id() != world_view.current_it() {
 			// we're not "it", run in a random direction with full speed
 			return Operation {
-				direction: random_direction,
+				direction: world_view.our_agent().heading + random_angle,
 				velocity: Agent::MAXIMUM_VELOCITY,
 				tag: None,
 			};
@@ -46,7 +47,7 @@ impl Behavior for DefaultBehavior {
 		if let Some((&taggable_id, _)) = world_view.reachable_agents().iter().find(|(&id, _)| id != previous_it) {
 			// Tag the first reachable agent and run away
 			return Operation {
-				direction: random_direction,
+				direction: world_view.our_agent().heading + random_angle,
 				velocity: Agent::MAXIMUM_VELOCITY,
 				tag: Some(taggable_id),
 			};
@@ -56,6 +57,7 @@ impl Behavior for DefaultBehavior {
 		if let Some((_, nearest)) = world_view
 			.visible_agents()
 			.iter()
+			.filter(|(&id, _)| id != previous_it)
 			.min_by(|(_, a), (_, b)| a.distance.partial_cmp(&b.distance).expect("Invalid distance"))
 		{
 			// chase the nearest
@@ -68,7 +70,7 @@ impl Behavior for DefaultBehavior {
 
 		// Can't see anybody, turn around, maybe we see someone
 		return Operation {
-			direction: world_view.our_agent().heading + Agent::FIELD_OF_VIEW_ANGLE,
+			direction: world_view.our_agent().heading + random_angle,
 			velocity: 0.0,
 			tag: None,
 		};

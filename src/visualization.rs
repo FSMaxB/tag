@@ -4,7 +4,7 @@ use crate::world::WorldSnapshot;
 use bevy::app::{EventReader, EventWriter};
 use bevy::asset::{Assets, Handle};
 use bevy::ecs::prelude::{Commands, Query, Res};
-use bevy::math::Vec2;
+use bevy::math::{Quat, Vec2};
 use bevy::prelude::{Color, OrthographicCameraBundle, ResMut, Sprite, SpriteBundle, Transform, UiCameraBundle};
 use bevy::sprite::ColorMaterial;
 
@@ -40,6 +40,7 @@ pub fn setup(
 				},
 				transform: Transform {
 					translation: Vec2::new(agent.position.x as f32, agent.position.y as f32).extend(0.0),
+					rotation: Quat::from_rotation_z(agent.heading.0 as f32),
 					..Default::default()
 				},
 				..Default::default()
@@ -76,6 +77,7 @@ pub fn agent_update_system(
 	for (mut transform, mut material, &id) in query.iter_mut() {
 		let agent = &latest_snapshot.agents[id];
 		transform.translation = Vec2::new(agent.position.x as f32, agent.position.y as f32).extend(0.0);
+		transform.rotation = Quat::from_rotation_z(agent.heading.0 as f32);
 
 		if id == latest_snapshot.it {
 			*material = color_materials.it.clone();
