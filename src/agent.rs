@@ -3,6 +3,7 @@ use cgmath::{Angle, InnerSpace, MetricSpace, Rad, Zero};
 use rand::Rng;
 use std::f64::consts::PI;
 
+#[derive(Clone)]
 pub struct Agent {
 	pub position: Vector,
 	pub heading: Radians,
@@ -10,10 +11,10 @@ pub struct Agent {
 
 impl Agent {
 	// TIL: https://github.com/rust-lang/rust/issues/43209, also floating point division is not allowed in const fn
-	const FIELD_OF_VIEW_ANGLE: Radians = Rad((30.0 / 180.0) * PI);
+	pub const FIELD_OF_VIEW_ANGLE: Radians = Rad((30.0 / 180.0) * PI);
 	/// How far an agent is allowed to move in one time step.
-	const MAXIMUM_VELOCITY: f64 = 10.0;
-	const RANGE: f64 = 5.0;
+	pub const MAXIMUM_VELOCITY: f64 = 10.0;
+	pub const RANGE: f64 = 5.0;
 
 	pub fn random(bounds: Vector, random_generator: &mut impl Rng) -> Self {
 		let position = Vector {
@@ -23,6 +24,14 @@ impl Agent {
 		let heading = Rad(random_generator.gen_range(Radians::zero().0..Radians::full_turn().0));
 
 		Self { position, heading }
+	}
+
+	/// Calculate the relationship to another Agent
+	pub fn relate_to(&self, other: &Agent) -> AgentRelationShip {
+		AgentRelationShip {
+			distance: self.distance(other),
+			direction: self.viewing_angle(other),
+		}
 	}
 
 	/// How far away is another agent.
@@ -67,6 +76,27 @@ impl Agent {
 		position.y = position.y.min(bounds.y).max(0.0);
 
 		Self { position, heading }
+	}
+}
+
+/// Summarizes the relationship of an Agent to another one.
+#[derive(Clone)]
+pub struct AgentRelationShip {
+	/// Our distance to the other Agent
+	pub distance: f64,
+	/// The angle of the other Agent from our heading
+	pub direction: Radians,
+}
+
+impl AgentRelationShip {
+	/// Can the other agent be reached by us?
+	pub fn is_reachable(&self) -> bool {
+		self.distance <= Agent::RANGE
+	}
+
+	/// Can the other agent be seen by us?
+	pub fn is_visible(&self) -> bool {
+		self.direction.abs() <= (Agent::FIELD_OF_VIEW_ANGLE / 2.0)
 	}
 }
 

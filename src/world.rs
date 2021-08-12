@@ -1,4 +1,4 @@
-use crate::agent::Agent;
+use crate::agent::{Agent, AgentRelationShip};
 use crate::id::Id;
 use crate::types::Vector;
 use cgmath::Deg;
@@ -29,27 +29,14 @@ impl World {
 		}
 	}
 
-	fn visible_agents(&self, agent: &Agent) -> BTreeMap<Id, &Agent> {
-		// Optimisation opportunities:
-		// 1. Reuse the storage location for the result
-		// 2. One loop for both reachable and visible agents.
-		self.agents
-			.iter()
-			.enumerate()
-			.filter(|(_, other_agent)| agent.can_see(other_agent))
-			.map(|(index, agent)| (Id::from(index), agent))
-			.collect()
-	}
-
-	fn reachable_agents<'visible>(
-		agent: &Agent,
-		visible_agents: &BTreeMap<Id, &'visible Agent>,
-	) -> BTreeMap<Id, &'visible Agent> {
-		visible_agents
-			.iter()
-			.filter(|(_, other_agent)| agent.can_reach(other_agent))
-			.map(|(&id, &agent)| (id, agent))
-			.collect()
+	pub fn world_view(&self, id: Id) -> WorldView {
+		WorldView {
+			world: self,
+			viewed_by: id,
+			agent: self.agents[id].clone(),
+			visible_agents: None,
+			reachable_agents: None,
+		}
 	}
 }
 
@@ -74,5 +61,69 @@ impl Display for World {
 		}
 
 		Ok(())
+	}
+}
+
+pub struct WorldView<'world> {
+	world: &'world World,
+	viewed_by: Id,
+	agent: Agent,
+	visible_agents: Option<BTreeMap<Id, AgentRelationShip>>,
+	reachable_agents: Option<BTreeMap<Id, AgentRelationShip>>,
+}
+
+impl<'world> WorldView<'world> {
+	pub fn our_id(&self) -> Id {
+		self.viewed_by
+	}
+
+	pub fn current_it(&self) -> Id {
+		self.world.it
+	}
+
+	pub fn previous_it(&self) -> Id {
+		self.world.previous_it
+	}
+
+	pub fn visible_agents(&mut self) -> &BTreeMap<Id, AgentRelationShip> {
+		if self.visible_agents.is_some() {
+			// FIXME: if let Some() would be better, but I can't get the borrow checker to agree with me here
+			return self.visible_agents.as_ref().unwrap();
+		}
+
+		// Optimisation opportunities:
+		// 1. Reuse the storage location for the result
+		// 2. One loop for both reachable and visible agents.
+		let visible_agents = self
+			.world
+			.agents
+			.iter()
+			.enumerate()
+			.map(|(other_id, other_agent)| (Id::from(other_id), self.agent.relate_to(other_agent)))
+			.filter(|(other_id, relationship)| (self.viewed_by != *other_id) && relationship.is_visible())
+			.collect();
+
+		self.visible_agents = Some(visible_agents);
+		self.visible_agents.as_ref().unwrap() // save because we just set it
+	}
+
+	pub fn reachable_agents(&mut self) -> &BTreeMap<Id, AgentRelationShip> {
+		if self.reachable_agents.is_some() {
+			// FIXME: if let Some() would be better, but I can't get the borrow checker to agree with me here
+			return self.reachable_agents.as_ref().unwrap();
+		}
+
+		let reachable_agents = self
+			.visible_agents()
+			.iter()
+			.filter(|(_, relationship)| relationship.is_reachable())
+			.map(|(&id, relationship)| (id, relationship.clone()))
+			.collect();
+		self.reachable_agents = Some(reachable_agents);
+		self.visible_agents.as_ref().unwrap() // save because we just set it
+	}
+
+	pub fn our_agent(&self) -> &Agent {
+		&self.agent
 	}
 }
