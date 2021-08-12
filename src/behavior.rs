@@ -13,7 +13,7 @@ pub enum Role {
 }
 
 pub trait Behavior {
-	fn perform_step(&self, world_view: &mut WorldView) -> Operation;
+	fn perform_step(&mut self, world_view: &mut WorldView) -> Operation;
 }
 
 pub struct Operation {
@@ -29,7 +29,7 @@ assert_obj_safe!(Behavior);
 pub struct DefaultBehavior;
 
 impl Behavior for DefaultBehavior {
-	fn perform_step(&self, world_view: &mut WorldView) -> Operation {
+	fn perform_step(&mut self, world_view: &mut WorldView) -> Operation {
 		let random_direction = Rad(thread_rng().gen_range(Radians::zero().0..Radians::full_turn().0));
 
 		if world_view.our_id() != world_view.current_it() {

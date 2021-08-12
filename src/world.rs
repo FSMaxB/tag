@@ -11,7 +11,7 @@ use std::sync::Mutex;
 pub struct World {
 	iteration: usize,
 	agents: Vec<Agent>,
-	behavior: Box<dyn Behavior>,
+	behaviors: Mutex<Vec<Box<dyn Behavior>>>, // not strictly necessary to be a Mutex. But easier for now
 	bounds: Vector,
 	it: Id,
 	previous_it: Id,
@@ -25,11 +25,15 @@ impl World {
 			.map(|_| Agent::random(bounds, random_generator))
 			.collect();
 
+		let behaviors = (0..agent_count)
+			.map(|_| Box::new(DefaultBehavior) as Box<dyn Behavior>)
+			.collect();
+
 		let it = random_generator.gen_range(0..agent_count).into();
 		Self {
 			iteration: Default::default(),
 			agents,
-			behavior: Box::new(DefaultBehavior),
+			behaviors: Mutex::new(behaviors),
 			bounds,
 			it,
 			previous_it: it,
@@ -42,12 +46,14 @@ impl World {
 	}
 
 	pub fn simulate_step(&mut self) {
-		let next_agents = self
-			.agents
-			.iter()
+		let mut behaviors_guard = self.behaviors.lock().expect("Lock was poisoned");
+		let behaviors = behaviors_guard.iter_mut();
+		let agents = self.agents.iter();
+
+		let next_agents = agents
+			.zip(behaviors)
 			.enumerate()
-			.map(|(index, agent)| (Id::from(index), agent.clone()))
-			.map(|(id, agent)| self.simulate_agent(id, agent))
+			.map(|(index, (agent, behavior))| self.simulate_agent(Id::from(index), agent.clone(), behavior.as_mut()))
 			.collect::<Vec<_>>();
 
 		self.previous_it = self.it;
@@ -56,13 +62,13 @@ impl World {
 		self.iteration += 1;
 	}
 
-	fn simulate_agent(&self, id: Id, agent: Agent) -> Agent {
+	fn simulate_agent(&self, id: Id, agent: Agent, behavior: &mut dyn Behavior) -> Agent {
 		let mut world_view = self.world_view(id, agent);
 		let Operation {
 			direction,
 			velocity,
 			tag,
-		} = self.behavior.perform_step(&mut world_view);
+		} = behavior.perform_step(&mut world_view);
 
 		// If the agent wants to tag someone, check if it is allowed and if so, store the next "it"
 		if let Some(tagged_id) = tag {
