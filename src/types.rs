@@ -1,4 +1,4 @@
-use cgmath::{Deg, Vector2};
+use cgmath::{Rad, Vector2};
 
 pub type Vector = Vector2<f64>;
-pub type Degrees = Deg<f64>;
+pub type Radians = Rad<f64>;
