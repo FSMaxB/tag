@@ -9,7 +9,8 @@ impl Iterator for IdSource {
 	type Item = Id;
 
 	fn next(&mut self) -> Option<Self::Item> {
-		if self.next_id == usize::MAX { // debatable if this is necessary
+		if self.next_id == usize::MAX {
+			// debatable if this is necessary
 			return None;
 		}
 
