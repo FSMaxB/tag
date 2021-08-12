@@ -1,12 +1,23 @@
 use crate::agent::Agent;
 use crate::id::Id;
+use crate::types::Vector;
 use crate::world::WorldSnapshot;
 use bevy::app::{EventReader, EventWriter};
 use bevy::asset::{Assets, Handle};
 use bevy::ecs::prelude::{Commands, Query, Res};
-use bevy::math::{Quat, Vec2};
-use bevy::prelude::{Color, OrthographicCameraBundle, ResMut, Sprite, SpriteBundle, Transform, UiCameraBundle};
+use bevy::math::{Quat, Vec2, Vec3};
+use bevy::prelude::{
+	Color, GlobalTransform, OrthographicCameraBundle, ResMut, Sprite, SpriteBundle, Transform, UiCameraBundle,
+};
 use bevy::sprite::ColorMaterial;
+
+pub struct Bounds(Vec2);
+
+impl From<Vector> for Bounds {
+	fn from(vector: Vector) -> Self {
+		Self(Vec2::new(vector.x as f32, vector.y as f32))
+	}
+}
 
 // No idea if this is how to do things, but I haven't found another way.
 pub struct ColorMaterials {
@@ -19,6 +30,7 @@ pub fn setup(
 	mut commands: Commands,
 	initial_snapshot: Res<WorldSnapshot>,
 	mut materials: ResMut<Assets<ColorMaterial>>,
+	bounds: Res<Bounds>,
 ) {
 	commands.spawn_bundle(OrthographicCameraBundle::new_2d());
 	commands.spawn_bundle(UiCameraBundle::default());
@@ -39,8 +51,12 @@ pub fn setup(
 					..Default::default()
 				},
 				transform: Transform {
-					translation: Vec2::new(agent.position.x as f32, agent.position.y as f32).extend(0.0),
+					translation: translation_for_agent(&bounds, agent),
 					rotation: Quat::from_rotation_z(agent.heading.0 as f32),
+					..Default::default()
+				},
+				global_transform: GlobalTransform {
+					translation: Vec2::new(-10_000.0, -10_000.0).extend(0.0),
 					..Default::default()
 				},
 				..Default::default()
@@ -67,6 +83,7 @@ pub fn world_update_event_system(
 pub fn agent_update_system(
 	mut event_reader: EventReader<WorldSnapshot>,
 	mut query: Query<(&mut Transform, &mut Handle<ColorMaterial>, &Id)>,
+	bounds: Res<Bounds>,
 	color_materials: Res<ColorMaterials>,
 ) {
 	let latest_snapshot = match event_reader.iter().last() {
@@ -76,7 +93,7 @@ pub fn agent_update_system(
 
 	for (mut transform, mut material, &id) in query.iter_mut() {
 		let agent = &latest_snapshot.agents[id];
-		transform.translation = Vec2::new(agent.position.x as f32, agent.position.y as f32).extend(0.0);
+		transform.translation = translation_for_agent(&bounds, agent);
 		transform.rotation = Quat::from_rotation_z(agent.heading.0 as f32);
 
 		if id == latest_snapshot.it {
@@ -87,4 +104,10 @@ pub fn agent_update_system(
 			*material = color_materials.regular.clone();
 		}
 	}
+}
+
+fn translation_for_agent(bounds: &Bounds, agent: &Agent) -> Vec3 {
+	let inital_translation = Vec2::new(agent.position.x as f32, agent.position.y as f32).extend(0.0);
+	let adjustment = (bounds.0 / 2.0).extend(0.0); // because in bevy, (0, 0) is in the middle of the screen
+	inital_translation - adjustment
 }

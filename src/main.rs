@@ -1,5 +1,6 @@
+use crate::agent::Agent;
 use crate::types::Vector;
-use crate::visualization::{agent_update_system, setup, world_update_event_system};
+use crate::visualization::{agent_update_system, setup, world_update_event_system, Bounds};
 use crate::world::{World, WorldSnapshot};
 use bevy::ecs::prelude::IntoSystem;
 use bevy::window::WindowDescriptor;
@@ -39,12 +40,9 @@ struct Options {
 fn main() {
 	let options = Options::from_args();
 
+	let bounds = Vector::new(options.width, options.height);
 	let mut rng = SmallRng::from_entropy();
-	let mut world = World::random(
-		Vector::new(options.width, options.height),
-		options.agent_count,
-		&mut rng,
-	);
+	let mut world = World::random(bounds, options.agent_count, &mut rng);
 
 	let (snapshot_sender, snapshot_receiver) = crossbeam::channel::bounded(1);
 	std::thread::spawn({
@@ -68,20 +66,23 @@ fn main() {
 
 	let initial_snapshot = snapshot_receiver.recv().expect("Failed to get initial snapshot");
 	bevy::prelude::App::build()
-		.add_plugins(DefaultPlugins)
-		.add_event::<WorldSnapshot>()
-		.insert_resource(initial_snapshot)
-		.insert_resource(snapshot_receiver)
+		// NOTE: The WindowDescriptor must be inserted BEFORE adding DefaultPlugins
 		.insert_resource(WindowDescriptor {
-			width: options.width.round() as f32,
-			height: options.height.round() as f32,
+			// The additional range is because a visual representation of an Agent has a width of Agent::RANGE pixels
+			width: (options.width + 3.0 * Agent::RANGE).round() as f32,
+			height: (options.height + 3.0 * Agent::RANGE).round() as f32,
 			resize_constraints: Default::default(),
 			scale_factor_override: None,
-			title: "".to_string(),
-			vsync: false,
+			title: "Simulation of a game of tag".to_string(),
+			vsync: true,
 			resizable: false,
 			..Default::default()
 		})
+		.add_plugins(DefaultPlugins)
+		.add_event::<WorldSnapshot>()
+		.insert_resource(Bounds::from(bounds))
+		.insert_resource(initial_snapshot)
+		.insert_resource(snapshot_receiver)
 		.add_startup_system(setup.system())
 		.add_system(world_update_event_system.system())
 		.add_system(agent_update_system.system())
