@@ -13,8 +13,8 @@ pub struct Agent {
 impl Agent {
 	// TIL: https://github.com/rust-lang/rust/issues/43209, also floating point division is not allowed in const fn
 	const FIELD_OF_VIEW_ANGLE: Radians = Rad((30.0 / 180.0) * PI);
-	/// How far an agent can move in one time step.
-	const VELOCITY: f64 = 10.0;
+	/// How far an agent is allowed to move in one time step.
+	const MAXIMUM_VELOCITY: f64 = 10.0;
 
 	pub fn random(id: Id, bounds: Vector, random_generator: &mut impl Rng) -> Self {
 		let position = Vector {
@@ -50,18 +50,17 @@ impl Agent {
 		self.viewing_angle(other).abs() <= (Self::FIELD_OF_VIEW_ANGLE / 2.0)
 	}
 
-	/// First moves in the current direction with the constant velocity, then updates the heading.
+	/// Moves with the given velocity in the given direction
 	/// If the agent hits the wall, it stops there.
-	pub fn perform_movement(&mut self, bounds: Vector, new_heading: Radians) {
-		self.position += self.heading_vector();
+	pub fn perform_movement(&mut self, bounds: Vector, velocity: f64, direction: Radians) {
+		self.heading = direction.normalize();
+		self.position += self.heading_vector(velocity);
 		self.position.x = self.position.x.min(bounds.x).max(0.0);
 		self.position.y = self.position.y.min(bounds.y).max(0.0);
-
-		self.heading = new_heading.normalize();
 	}
 
-	fn heading_vector(&self) -> Vector {
-		rotate_by_angle(Vector::unit_x() * Self::VELOCITY, self.heading)
+	fn heading_vector(&self, velocity: f64) -> Vector {
+		rotate_by_angle(Vector::unit_x() * velocity.min(Self::MAXIMUM_VELOCITY), self.heading)
 	}
 }
 
@@ -131,7 +130,7 @@ mod test {
 					Vector::unit_x(),
 					looking_agent.heading + (Agent::FIELD_OF_VIEW_ANGLE / 2.0) + Rad(0.1),
 				),
-			heading: Radians::zero(),
+			heading: Zero::zero(),
 		};
 		assert!(!looking_agent.sees(&out_of_view_left));
 
@@ -142,14 +141,14 @@ mod test {
 					Vector::unit_x(),
 					looking_agent.heading - (Agent::FIELD_OF_VIEW_ANGLE / 2.0) - Rad(0.1),
 				),
-			heading: Radians::zero(),
+			heading: Zero::zero(),
 		};
 		assert!(!looking_agent.sees(&out_of_view_right));
 
 		let in_view = Agent {
 			id: id_source.next().unwrap(),
 			position: center + rotate_by_angle(Vector::unit_x(), looking_agent.heading),
-			heading: Radians::zero(),
+			heading: Zero::zero(),
 		};
 		assert!(looking_agent.sees(&in_view));
 	}
@@ -157,32 +156,34 @@ mod test {
 	#[test]
 	fn should_move_around() {
 		let mut id_source = IdSource::default();
-		let bounds = Vector::new(15.0, 15.0);
+		let bounds = Vector::new(100.0, 5.0);
 
 		let mut agent = Agent {
 			id: id_source.next().unwrap(),
 			position: Vector::zero(),
-			heading: Deg(0.0).into(),
+			heading: Zero::zero(),
 		};
-		// move right, turn up
-		agent.perform_movement(bounds, Deg(90.0).into());
-		assert_eq!(Radians::from(Deg(90.0)), agent.heading);
-		assert_eq!(Vector::new(10.0, 0.0), agent.position);
-
-		// move up, turn right
-		agent.perform_movement(bounds, Deg(0.0).into());
+		// move right by one
+		agent.perform_movement(bounds, 1.0, Deg(0.0).into());
 		assert_eq!(Radians::from(Deg(0.0)), agent.heading);
-		assert_eq!(Vector::new(10.0, 10.0), agent.position);
+		assert_eq!(Vector::new(1.0, 0.0), agent.position);
 
-		// move right and hit wall, turn left
-		agent.perform_movement(bounds, Deg(-180.0).into());
-		assert_eq!(Radians::from(Deg(180.0)), agent.heading);
-		assert_eq!(Vector::new(15.0, 10.0), agent.position);
+		// move up by 10 (hit wall)
+		agent.perform_movement(bounds, 10.0, Deg(90.0).into());
+		assert_eq!(Radians::from(Deg(90.0)), agent.heading);
+		assert_eq!(1.0, agent.position.x.round()); // NOTE: We start to see rounding errors
+		assert_eq!(5.0, agent.position.y);
 
-		// move left and don't turn
-		agent.perform_movement(bounds, Deg(-180.0).into());
+		// move right by 12 (too fast, should only move 10), turn left
+		agent.perform_movement(bounds, 12.0, Deg(0.0).into());
+		assert_eq!(Radians::from(Deg(0.0)), agent.heading);
+		assert_eq!(11.0, agent.position.x.round());
+		assert_eq!(5.0, agent.position.y);
+
+		// move left by 9
+		agent.perform_movement(bounds, 9.0, Deg(-180.0).into());
 		assert_eq!(Radians::from(Deg(180.0)), agent.heading); // checks the normalization as well
-		assert_eq!(5.0, agent.position.x);
-		assert_eq!(10.0, agent.position.y.round()); // NOTE: Now we start to see rounding errors
+		assert_eq!(2.0, agent.position.x.round());
+		assert_eq!(5.0, agent.position.y);
 	}
 }
