@@ -1,16 +1,20 @@
 use crate::agent::{Agent, AgentRelationShip};
+use crate::behavior::{Behavior, DefaultBehavior, Operation};
 use crate::id::Id;
 use crate::types::Vector;
 use cgmath::Deg;
 use rand::Rng;
 use std::collections::BTreeMap;
 use std::fmt::{Display, Formatter};
+use std::sync::Mutex;
 
 pub struct World {
 	agents: Vec<Agent>,
+	behavior: Box<dyn Behavior>,
 	bounds: Vector,
 	it: Id,
 	previous_it: Id,
+	next_it: Mutex<Id>,
 }
 
 impl World {
@@ -23,10 +27,31 @@ impl World {
 		let it = random_generator.gen_range(0..agent_count).into();
 		Self {
 			agents,
+			behavior: Box::new(DefaultBehavior),
 			bounds,
 			it,
 			previous_it: it,
+			next_it: Mutex::new(it),
 		}
+	}
+
+	fn simulate_agent(&self, id: Id) -> Agent {
+		let mut world_view = self.world_view(id);
+		let Operation {
+			direction,
+			velocity,
+			tag,
+		} = self.behavior.perform_step(&mut world_view);
+
+		// If the agent wants to tag someone, check if it is allowed and if so, store the next "it"
+		if let Some(tagged_id) = tag {
+			if world_view.reachable_agents().contains_key(&tagged_id) {
+				let mut next_it = self.next_it.lock().expect("Lock was poisoned");
+				*next_it = tagged_id;
+			}
+		}
+
+		world_view.agent.perform_movement(self.bounds, velocity, direction)
 	}
 
 	pub fn world_view(&self, id: Id) -> WorldView {
