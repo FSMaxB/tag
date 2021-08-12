@@ -15,7 +15,7 @@ pub struct World {
 	bounds: Vector,
 	it: Id,
 	previous_it: Id,
-	next_it: Mutex<Id>,
+	next_it: Mutex<Option<Id>>,
 }
 
 impl World {
@@ -37,7 +37,7 @@ impl World {
 			bounds,
 			it,
 			previous_it: it,
-			next_it: Mutex::new(it),
+			next_it: Default::default(),
 		}
 	}
 
@@ -56,9 +56,11 @@ impl World {
 			.map(|(index, (agent, behavior))| self.simulate_agent(Id::from(index), agent.clone(), behavior.as_mut()))
 			.collect::<Vec<_>>();
 
-		self.previous_it = self.it;
-		self.it = *self.next_it.lock().expect("Lock was poisoned");
 		self.agents = next_agents;
+		if let Some(next_it) = self.next_it.lock().expect("Lock was poisoned").take() {
+			self.previous_it = self.it;
+			self.it = next_it;
+		}
 		self.iteration += 1;
 	}
 
@@ -74,7 +76,7 @@ impl World {
 		if let Some(tagged_id) = tag {
 			if world_view.reachable_agents().contains_key(&tagged_id) {
 				let mut next_it = self.next_it.lock().expect("Lock was poisoned");
-				*next_it = tagged_id;
+				*next_it = Some(tagged_id);
 			}
 		}
 
