@@ -43,12 +43,7 @@ impl Behavior for DefaultBehavior {
 
 		// We're it! See if we can catch somebody
 		let previous_it = world_view.previous_it();
-		if let Some((&taggable_id, _)) = world_view
-			.reachable_agents()
-			.iter()
-			.filter(|(&id, _)| id != previous_it)
-			.next()
-		{
+		if let Some((&taggable_id, _)) = world_view.reachable_agents().iter().find(|(&id, _)| id != previous_it) {
 			// Tag the first reachable agent and run away
 			return Operation {
 				direction: random_direction,

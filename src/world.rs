@@ -9,6 +9,7 @@ use std::fmt::{Display, Formatter};
 use std::sync::Mutex;
 
 pub struct World {
+	iteration: usize,
 	agents: Vec<Agent>,
 	behavior: Box<dyn Behavior>,
 	bounds: Vector,
@@ -26,6 +27,7 @@ impl World {
 
 		let it = random_generator.gen_range(0..agent_count).into();
 		Self {
+			iteration: Default::default(),
 			agents,
 			behavior: Box::new(DefaultBehavior),
 			bounds,
@@ -35,8 +37,27 @@ impl World {
 		}
 	}
 
-	fn simulate_agent(&self, id: Id) -> Agent {
-		let mut world_view = self.world_view(id);
+	pub fn iteration(&self) -> usize {
+		self.iteration
+	}
+
+	pub fn simulate_step(&mut self) {
+		let next_agents = self
+			.agents
+			.iter()
+			.enumerate()
+			.map(|(index, agent)| (Id::from(index), agent.clone()))
+			.map(|(id, agent)| self.simulate_agent(id, agent))
+			.collect::<Vec<_>>();
+
+		self.previous_it = self.it;
+		self.it = *self.next_it.lock().expect("Lock was poisoned");
+		self.agents = next_agents;
+		self.iteration += 1;
+	}
+
+	fn simulate_agent(&self, id: Id, agent: Agent) -> Agent {
+		let mut world_view = self.world_view(id, agent);
 		let Operation {
 			direction,
 			velocity,
@@ -54,11 +75,11 @@ impl World {
 		world_view.agent.perform_movement(self.bounds, velocity, direction)
 	}
 
-	pub fn world_view(&self, id: Id) -> WorldView {
+	fn world_view(&self, id: Id, agent: Agent) -> WorldView {
 		WorldView {
 			world: self,
 			viewed_by: id,
-			agent: self.agents[id].clone(),
+			agent,
 			visible_agents: None,
 			reachable_agents: None,
 		}

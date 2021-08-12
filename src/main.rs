@@ -14,6 +14,14 @@ fn main() {
 	const AGENT_COUNT: usize = 100;
 
 	let mut rng = SmallRng::from_entropy();
-	let world = World::random(BOUNDS, AGENT_COUNT, &mut rng);
+	let mut world = World::random(BOUNDS, AGENT_COUNT, &mut rng);
+	println!("{}", world);
+
+	for _ in 0..1_000_000 {
+		world.simulate_step();
+		if world.iteration() % 1_000 == 0 {
+			println!("Iteration: {}", world.iteration());
+		}
+	}
 	println!("{}", world);
 }
