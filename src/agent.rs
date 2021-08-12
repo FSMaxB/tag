@@ -1,6 +1,6 @@
-use crate::id::{Id, IdSource};
+use crate::id::Id;
 use crate::types::{Degrees, Vector};
-use cgmath::{Angle, Deg, Vector2, Zero};
+use cgmath::{Angle, Deg, Zero};
 use rand::Rng;
 
 pub struct Agent {
