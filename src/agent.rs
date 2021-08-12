@@ -1,5 +1,5 @@
 use crate::id::Id;
-use crate::types::{Radians, Vector};
+use crate::types::{Absolute, Radians, Vector};
 use cgmath::{Angle, InnerSpace, MetricSpace, Rad, Zero};
 use rand::Rng;
 use std::f64::consts::PI;
@@ -32,10 +32,21 @@ impl Agent {
 
 	/// At what angle would this agent see the other one based on its current heading.
 	/// The resulting angle is between `-pi` and `+pi`.
+	///
+	/// Identical positions are considered as a viewing angle of 0.
 	pub fn viewing_angle(&self, other: &Agent) -> Radians {
+		if self.position == other.position {
+			return Radians::zero();
+		}
+
 		let vector = other.position - self.position;
 		let absolute_angle = Vector::new(1.0, 0.0).angle(vector);
 		(absolute_angle - self.heading).normalize_signed()
+	}
+
+	/// Does this agent see the other one?
+	pub fn sees(&self, other: &Agent) -> bool {
+		self.viewing_angle(other).abs() <= (Self::FIELD_OF_VIEW_ANGLE / 2.0)
 	}
 }
 
@@ -43,7 +54,7 @@ impl Agent {
 mod test {
 	use super::*;
 	use crate::id::IdSource;
-	use cgmath::Deg;
+	use cgmath::{Basis2, Deg, Rotation, Rotation2};
 
 	#[test]
 	fn should_calculate_distance_between_agents() {
@@ -81,5 +92,54 @@ mod test {
 		};
 
 		assert_eq!(Deg(90.0), Deg::from(looking_agent.viewing_angle(&seen_agent)));
+		assert_eq!(Deg::zero(), Deg::from(looking_agent.viewing_angle(&looking_agent)));
+	}
+
+	#[test]
+	fn should_check_if_another_agent_is_seen() {
+		let mut id_source = IdSource::default();
+
+		let center = Vector::new(10.0, 10.0);
+
+		let looking_agent = Agent {
+			id: id_source.next().unwrap(),
+			position: center,
+			heading: Deg(45.0).into(),
+		};
+		assert!(looking_agent.sees(&looking_agent));
+
+		let out_of_view_left = Agent {
+			id: id_source.next().unwrap(),
+			position: center
+				+ rotate_by_angle(
+					Vector::unit_x(),
+					looking_agent.heading + (Agent::FIELD_OF_VIEW_ANGLE / 2.0) + Rad(0.1),
+				),
+			heading: Radians::zero(),
+		};
+		assert!(!looking_agent.sees(&out_of_view_left));
+
+		let out_of_view_right = Agent {
+			id: id_source.next().unwrap(),
+			position: center
+				+ rotate_by_angle(
+					Vector::unit_x(),
+					looking_agent.heading - (Agent::FIELD_OF_VIEW_ANGLE / 2.0) - Rad(0.1),
+				),
+			heading: Radians::zero(),
+		};
+		assert!(!looking_agent.sees(&out_of_view_right));
+
+		let in_view = Agent {
+			id: id_source.next().unwrap(),
+			position: center + rotate_by_angle(Vector::unit_x(), looking_agent.heading),
+			heading: Radians::zero(),
+		};
+		assert!(looking_agent.sees(&in_view));
+	}
+
+	fn rotate_by_angle(vector: Vector, angle: impl Into<Radians>) -> Vector {
+		let rotation: Basis2<_> = Rotation2::from_angle(angle);
+		rotation.rotate_vector(vector)
 	}
 }
