@@ -11,7 +11,7 @@ use std::sync::Mutex;
 pub struct World {
 	iteration: usize,
 	agents: Vec<Agent>,
-	behaviors: Mutex<Vec<Box<dyn Behavior>>>, // not strictly necessary to be a Mutex. But easier for now
+	behaviors: Mutex<Vec<Box<dyn Behavior + Send + Sync + 'static>>>, // not strictly necessary to be a Mutex. But easier for now
 	bounds: Vector,
 	it: Id,
 	previous_it: Id,
@@ -26,7 +26,7 @@ impl World {
 			.collect();
 
 		let behaviors = (0..agent_count)
-			.map(|_| Box::new(DefaultBehavior) as Box<dyn Behavior>)
+			.map(|_| Box::new(DefaultBehavior) as Box<dyn Behavior + Send + Sync + 'static>)
 			.collect();
 
 		let it = random_generator.gen_range(0..agent_count).into();
@@ -81,6 +81,17 @@ impl World {
 		world_view.agent.perform_movement(self.bounds, velocity, direction)
 	}
 
+	/// Snapshots the world as it is right now.
+	pub fn snapshot(&self) -> WorldSnapshot {
+		// Optimization opportunity: Update existing snapshot instead of creating a new one
+		WorldSnapshot {
+			agents: self.agents.clone(),
+			iteration: self.iteration,
+			it: self.it,
+			previous_it: self.previous_it,
+		}
+	}
+
 	fn world_view(&self, id: Id, agent: Agent) -> WorldView {
 		WorldView {
 			world: self,
@@ -90,6 +101,14 @@ impl World {
 			reachable_agents: None,
 		}
 	}
+}
+
+/// A snapshot of a single iteration of the simulation.
+pub struct WorldSnapshot {
+	pub agents: Vec<Agent>,
+	pub iteration: usize,
+	pub it: Id,
+	pub previous_it: Id,
 }
 
 impl Display for World {

@@ -12,3 +12,5 @@ cgmath = "0.18"
 rand = {version = "0.8", features = ["small_rng"]}
 static_assertions = "1"
 structopt = "0.3"
+bevy = "0.5"
+crossbeam = "0.8"
