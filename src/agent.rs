@@ -1,11 +1,9 @@
-use crate::id::Id;
 use crate::types::{rotate_by_angle, Absolute, Radians, Vector};
 use cgmath::{Angle, InnerSpace, MetricSpace, Rad, Zero};
 use rand::Rng;
 use std::f64::consts::PI;
 
 pub struct Agent {
-	id: Id,
 	position: Vector,
 	heading: Radians,
 }
@@ -16,18 +14,14 @@ impl Agent {
 	/// How far an agent is allowed to move in one time step.
 	const MAXIMUM_VELOCITY: f64 = 10.0;
 
-	pub fn random(id: Id, bounds: Vector, random_generator: &mut impl Rng) -> Self {
+	pub fn random(bounds: Vector, random_generator: &mut impl Rng) -> Self {
 		let position = Vector {
 			x: random_generator.gen_range(0.0..bounds.x),
 			y: random_generator.gen_range(0.0..bounds.y),
 		};
 		let heading = Rad(random_generator.gen_range(Radians::zero().0..Radians::full_turn().0));
 
-		Self { id, position, heading }
-	}
-
-	fn id(&self) -> Id {
-		self.id
+		Self { position, heading }
 	}
 
 	/// How far away is another agent.
@@ -66,33 +60,24 @@ impl Agent {
 		position.x = position.x.min(bounds.x).max(0.0);
 		position.y = position.y.min(bounds.y).max(0.0);
 
-		Self {
-			id: self.id,
-			position,
-			heading,
-		}
+		Self { position, heading }
 	}
 }
 
 #[cfg(test)]
 mod test {
 	use super::*;
-	use crate::id::IdSource;
 	use crate::types::rotate_by_angle;
 	use cgmath::Deg;
 
 	#[test]
 	fn should_calculate_distance_between_agents() {
-		let mut id_source = IdSource::default();
-
 		let a = Agent {
-			id: id_source.next().unwrap(),
 			position: Vector::new(1.0, 2.0),
 			heading: Radians::zero(),
 		};
 
 		let b = Agent {
-			id: id_source.next().unwrap(),
 			position: Vector::new(2.0, 3.0),
 			heading: Radians::zero(),
 		};
@@ -102,16 +87,12 @@ mod test {
 
 	#[test]
 	fn should_calculate_angle_at_which_one_agent_views_another_one() {
-		let mut id_source = IdSource::default();
-
 		let looking_agent = Agent {
-			id: id_source.next().unwrap(),
 			position: Vector::new(10.0, 10.0),
 			heading: Deg(45.0).into(),
 		};
 
 		let seen_agent = Agent {
-			id: id_source.next().unwrap(),
 			position: Vector::new(9.0, 11.0),
 			heading: Radians::zero(),
 		};
@@ -122,19 +103,15 @@ mod test {
 
 	#[test]
 	fn should_check_if_another_agent_is_seen() {
-		let mut id_source = IdSource::default();
-
 		let center = Vector::new(10.0, 10.0);
 
 		let looking_agent = Agent {
-			id: id_source.next().unwrap(),
 			position: center,
 			heading: Deg(45.0).into(),
 		};
 		assert!(looking_agent.sees(&looking_agent));
 
 		let out_of_view_left = Agent {
-			id: id_source.next().unwrap(),
 			position: center
 				+ rotate_by_angle(
 					Vector::unit_x(),
@@ -145,7 +122,6 @@ mod test {
 		assert!(!looking_agent.sees(&out_of_view_left));
 
 		let out_of_view_right = Agent {
-			id: id_source.next().unwrap(),
 			position: center
 				+ rotate_by_angle(
 					Vector::unit_x(),
@@ -156,7 +132,6 @@ mod test {
 		assert!(!looking_agent.sees(&out_of_view_right));
 
 		let in_view = Agent {
-			id: id_source.next().unwrap(),
 			position: center + rotate_by_angle(Vector::unit_x(), looking_agent.heading),
 			heading: Zero::zero(),
 		};
@@ -165,11 +140,9 @@ mod test {
 
 	#[test]
 	fn should_move_around() {
-		let mut id_source = IdSource::default();
 		let bounds = Vector::new(100.0, 5.0);
 
 		let mut agent = Agent {
-			id: id_source.next().unwrap(),
 			position: Vector::zero(),
 			heading: Zero::zero(),
 		};
