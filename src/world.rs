@@ -3,6 +3,7 @@ use crate::id::Id;
 use crate::types::Vector;
 use cgmath::Deg;
 use rand::Rng;
+use std::collections::BTreeMap;
 use std::fmt::{Display, Formatter};
 
 pub struct World {
@@ -26,6 +27,29 @@ impl World {
 			it,
 			previous_it: it,
 		}
+	}
+
+	fn visible_agents(&self, agent: &Agent) -> BTreeMap<Id, &Agent> {
+		// Optimisation opportunities:
+		// 1. Reuse the storage location for the result
+		// 2. One loop for both reachable and visible agents.
+		self.agents
+			.iter()
+			.enumerate()
+			.filter(|(_, other_agent)| agent.can_see(other_agent))
+			.map(|(index, agent)| (Id::from(index), agent))
+			.collect()
+	}
+
+	fn reachable_agents<'visible>(
+		agent: &Agent,
+		visible_agents: &BTreeMap<Id, &'visible Agent>,
+	) -> BTreeMap<Id, &'visible Agent> {
+		visible_agents
+			.iter()
+			.filter(|(_, other_agent)| agent.can_reach(other_agent))
+			.map(|(&id, &agent)| (id, agent))
+			.collect()
 	}
 }
 
