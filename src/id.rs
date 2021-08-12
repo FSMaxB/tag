@@ -1,7 +1,7 @@
 use std::fmt::{Display, Formatter};
 use std::ops::Index;
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialOrd, Ord, PartialEq, Eq)]
 pub struct Id(usize);
 
 impl Display for Id {
