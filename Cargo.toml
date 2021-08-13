@@ -7,6 +7,10 @@ resolver = "2"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[[bin]]
+name = "tag"
+path = "src/bin/tag.rs"
+
 [dependencies]
 cgmath = "0.18"
 rand = {version = "0.8", features = ["small_rng"]}

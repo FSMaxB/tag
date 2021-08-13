@@ -1,22 +1,14 @@
-use crate::behavior::DefaultBehavior;
-use crate::types::Vector;
-use crate::viewer::{CommandlineViewer, Viewer};
-use crate::visualization::BevyViewer;
-use crate::world::World;
 use rand::rngs::SmallRng;
 use rand::SeedableRng;
 use std::str::FromStr;
 use std::sync::Arc;
 use std::time::Duration;
 use structopt::StructOpt;
-
-pub mod agent;
-pub mod behavior;
-pub mod id;
-pub mod types;
-pub mod viewer;
-pub mod visualization;
-pub mod world;
+use tag::behavior::DefaultBehavior;
+use tag::types::Vector;
+use tag::viewer::{CommandlineViewer, Viewer};
+use tag::visualization::BevyViewer;
+use tag::world::World;
 
 #[derive(Debug, StructOpt)]
 #[structopt(name = "tag simulation", about = "Simulating a game of tag.")]

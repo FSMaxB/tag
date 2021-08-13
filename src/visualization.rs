@@ -1,8 +1,8 @@
 use crate::agent::Agent;
 use crate::id::Id;
 use crate::types::Vector;
+use crate::viewer::Viewer;
 use crate::world::{World, WorldSnapshot};
-use crate::Viewer;
 use bevy::app::{EventReader, EventWriter};
 use bevy::asset::{AssetServer, Assets, Handle};
 use bevy::ecs::prelude::{Commands, IntoSystem, Query, Res};
