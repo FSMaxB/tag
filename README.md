@@ -29,6 +29,9 @@ OPTIONS:
         --agent-count <agent-count>                  Number of players [default: 20]
         --delay-milliseconds <delay-milliseconds>    Milliseconds to wait between every iteration [default: 50]
         --height <height>                            Height of the playing field [default: 500]
+        --viewer <viewer>
+            How should the simulation be displayed (visual or command-line) [default: visual]
+
         --width <width>                              Width of the playing field [default: 500]
 
 ARGS:
