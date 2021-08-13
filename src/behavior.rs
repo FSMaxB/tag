@@ -4,6 +4,7 @@ use crate::id::Id;
 use crate::types::Radians;
 use crate::world::WorldView;
 
+pub mod chasing;
 pub mod default;
 
 /// This trait needs to be implemented to give an Agent a Behavior.
