@@ -1,8 +1,8 @@
 use cgmath::num_traits::real::Real;
 use cgmath::{Basis2, Deg, Rad, Rotation, Rotation2, Vector2};
 
-pub type Vector = Vector2<f64>;
-pub type Radians = Rad<f64>;
+pub type Vector = Vector2<f32>;
+pub type Radians = Rad<f32>;
 
 pub trait Absolute {
 	fn abs(&self) -> Self;

@@ -22,7 +22,7 @@ pub struct Operation {
 	/// Direction to move in.
 	pub direction: Radians,
 	/// Velocity to move with. This is automatically capped to the maximum allowed velocity.
-	pub velocity: f64,
+	pub velocity: f32,
 	/// Which [`Id`] to tag. This is ignored if the agent performing the operation is not "it"
 	/// or if the tagged [`Id`] belongs to the previous "it"
 	pub tag: Option<Id>,

@@ -17,7 +17,7 @@ pub struct ChasingBehavior {
 impl Behavior for ChasingBehavior {
 	fn perform_step(&mut self, world_view: &mut WorldView) -> Operation {
 		// more likely to go right
-		let random_angle = Radians::from(Deg(10.0)) * (thread_rng().gen_range(-1i8..=2) as f64);
+		let random_angle = Radians::from(Deg(10.0)) * (thread_rng().gen_range(-1i8..=2) as f32);
 
 		let it = world_view.current_it();
 		let previous_it = world_view.previous_it();

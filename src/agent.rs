@@ -1,7 +1,7 @@
 use crate::types::{rotate_by_angle, Absolute, Radians, Vector};
 use cgmath::{Angle, InnerSpace, MetricSpace, Rad, Zero};
 use rand::Rng;
-use std::f64::consts::PI;
+use std::f32::consts::PI;
 
 /// Low level type that represents the state of an agent in the world and
 /// combines the calculation to relate different agents to another.
@@ -18,9 +18,9 @@ impl Agent {
 	// TIL: https://github.com/rust-lang/rust/issues/43209, also floating point division is not allowed in const fn
 	pub const FIELD_OF_VIEW_ANGLE: Radians = Rad((200.0 / 180.0) * PI);
 	/// How far an agent is allowed to move in one time step.
-	pub const MAXIMUM_VELOCITY: f64 = 5.0;
+	pub const MAXIMUM_VELOCITY: f32 = 5.0;
 	/// How far an agent can reach
-	pub const RANGE: f64 = 10.0;
+	pub const RANGE: f32 = 10.0;
 
 	pub fn random(bounds: Vector, random_generator: &mut impl Rng) -> Self {
 		let position = Vector {
@@ -41,7 +41,7 @@ impl Agent {
 	}
 
 	/// How far away is another agent.
-	pub fn distance(&self, other: &Agent) -> f64 {
+	pub fn distance(&self, other: &Agent) -> f32 {
 		self.position.distance(other.position)
 	}
 
@@ -71,7 +71,7 @@ impl Agent {
 
 	/// Moves with the given velocity in the given direction
 	/// If the agent hits the wall, it stops there.
-	pub fn perform_movement(&self, bounds: Vector, velocity: f64, direction: Radians) -> Self {
+	pub fn perform_movement(&self, bounds: Vector, velocity: f32, direction: Radians) -> Self {
 		let heading = direction.normalize();
 		let velocity = velocity.min(Self::MAXIMUM_VELOCITY);
 
@@ -89,7 +89,7 @@ impl Agent {
 #[derive(Clone)]
 pub struct AgentRelationShip {
 	/// Our distance to the other Agent
-	pub distance: f64,
+	pub distance: f32,
 	/// The angle of the other Agent from our heading
 	pub direction: Radians,
 }
@@ -124,7 +124,7 @@ mod test {
 			heading: Radians::zero(),
 		};
 
-		assert_eq!(2.0f64.sqrt(), a.distance(&b));
+		assert_eq!(2.0f32.sqrt(), a.distance(&b));
 	}
 
 	#[test]
@@ -207,18 +207,18 @@ mod test {
 		agent = agent.perform_movement(bounds, 3.0, Deg(90.0).into());
 		assert_eq!(Radians::from(Deg(90.0)), agent.heading);
 		assert_eq!(1.0, agent.position.x.round()); // NOTE: We start to see rounding errors
-		assert_eq!(3.0, agent.position.y);
+		assert_eq!(3.0, agent.position.y.round());
 
 		// move right by 12 (too fast, should only move 5), turn left
 		agent = agent.perform_movement(bounds, 12.0, Deg(0.0).into());
 		assert_eq!(Radians::from(Deg(0.0)), agent.heading);
 		assert_eq!(6.0, agent.position.x.round());
-		assert_eq!(3.0, agent.position.y);
+		assert_eq!(3.0, agent.position.y.round());
 
 		// move left by 9
 		agent = agent.perform_movement(bounds, 4.0, Deg(-180.0).into());
 		assert_eq!(Radians::from(Deg(180.0)), agent.heading); // checks the normalization as well
 		assert_eq!(2.0, agent.position.x.round());
-		assert_eq!(3.0, agent.position.y);
+		assert_eq!(3.0, agent.position.y.round());
 	}
 }

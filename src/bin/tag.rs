@@ -19,10 +19,10 @@ struct Options {
 	iterations: usize,
 	/// Width of the playing field
 	#[structopt(long, default_value = "500")]
-	width: f64,
+	width: u16,
 	/// Height of the playing field
 	#[structopt(long, default_value = "500")]
-	height: f64,
+	height: u16,
 	/// Number of players
 	#[structopt(long, default_value = "10")]
 	agent_count: usize,
@@ -81,7 +81,7 @@ impl FromStr for BehaviorOption {
 fn main() {
 	let options = Options::from_args();
 
-	let bounds = Vector::new(options.width, options.height);
+	let bounds = Vector::new(options.width as f32, options.height as f32);
 	let mut rng = SmallRng::from_entropy();
 
 	let mut world = match options.behavior {
