@@ -37,3 +37,14 @@ OPTIONS:
 ARGS:
     <iterations>    How many iterations to simulate [default: 10000]
 ```
+
+## Benchmarks
+Performance benchmarks can be run using `cargo bench`
+
+For future reference on my machine:
+```
+test default_behavior_100_000_agents ... bench:  12,540,808 ns/iter (+/- 8,041,112)
+test default_behavior_10_000_agents  ... bench:   1,130,749 ns/iter (+/- 275,085)
+test default_behavior_10_agents      ... bench:         928 ns/iter (+/- 20)
+test default_behavior_1_000_agents   ... bench:     109,691 ns/iter (+/- 9,442)
+```
