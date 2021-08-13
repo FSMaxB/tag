@@ -42,6 +42,10 @@ ARGS:
     <iterations>    How many iterations to simulate [default: 10000]
 ```
 
+## Documentation
+
+To get an overview over the code base, you can also generate the rustdoc documentation using `cargo doc --open`.
+
 ## Benchmarks
 Performance benchmarks can be run using `cargo bench`
 

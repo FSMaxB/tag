@@ -7,6 +7,8 @@ use crate::world::WorldView;
 use cgmath::Deg;
 use rand::{thread_rng, Rng};
 
+/// Almost the same as [`DefaultBehavior`], just that it remembers which agent it was chasing
+/// and continues chasing that one if it still sees it.
 #[derive(Default)]
 pub struct ChasingBehavior {
 	chasing: Option<Id>,
