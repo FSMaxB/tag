@@ -1,13 +1,11 @@
-use crate::agent::Agent;
 use crate::behavior::DefaultBehavior;
 use crate::types::Vector;
-use crate::visualization::{agent_update_system, setup, world_update_event_system, Bounds};
-use crate::world::{World, WorldSnapshot};
-use bevy::ecs::prelude::IntoSystem;
-use bevy::window::WindowDescriptor;
-use bevy::DefaultPlugins;
+use crate::viewer::{CommandlineViewer, Viewer};
+use crate::visualization::BevyViewer;
+use crate::world::World;
 use rand::rngs::SmallRng;
 use rand::SeedableRng;
+use std::sync::Arc;
 use std::time::Duration;
 use structopt::StructOpt;
 
@@ -15,6 +13,7 @@ pub mod agent;
 pub mod behavior;
 pub mod id;
 pub mod types;
+pub mod viewer;
 pub mod visualization;
 pub mod world;
 
@@ -36,6 +35,9 @@ struct Options {
 	/// Milliseconds to wait between every iteration
 	#[structopt(long, default_value = "50")]
 	delay_milliseconds: u64,
+	/// Use this flag to disable the graphical visualization
+	#[structopt(long = "no-visualize", parse(from_flag = std::ops::Not::not))]
+	visualize: bool,
 }
 
 fn main() {
@@ -45,45 +47,34 @@ fn main() {
 	let mut rng = SmallRng::from_entropy();
 	let mut world = World::random(bounds, options.agent_count, || DefaultBehavior, &mut rng);
 
-	let (snapshot_sender, snapshot_receiver) = crossbeam::channel::bounded(1);
-	std::thread::spawn({
+	let viewer = if options.visualize {
+		Arc::new(BevyViewer::new(bounds)) as Arc<dyn Viewer>
+	} else {
+		Arc::new(CommandlineViewer::default()) as Arc<dyn Viewer>
+	};
+
+	let simulation_handle = std::thread::spawn({
 		let iterations = options.iterations;
 		let iteration_delay = Duration::from_millis(options.delay_milliseconds);
+		let viewer = viewer.clone();
 		move || {
 			for _ in 0..iterations {
-				if !snapshot_sender.is_full() {
-					// only snapshot if the visualization is ready to draw a new frame
-					snapshot_sender
-						.send(world.snapshot())
-						.expect("Failed to send snapshot!");
-				}
 				if !iteration_delay.is_zero() {
+					// in case of zero `sleep` might still sleep the thread, so don't call it in that case
 					std::thread::sleep(iteration_delay);
 				}
+
 				world.simulate_step();
+				viewer.iteration(&world);
 			}
+
+			viewer.finished(&world);
 		}
 	});
 
-	let initial_snapshot = snapshot_receiver.recv().expect("Failed to get initial snapshot");
-	bevy::prelude::App::build()
-		// NOTE: The WindowDescriptor must be inserted BEFORE adding DefaultPlugins
-		.insert_resource(WindowDescriptor {
-			// The additional range is because a visual representation of an Agent has a width of Agent::RANGE pixels
-			width: (options.width + 3.0 * Agent::RANGE).round() as f32,
-			height: (options.height + 3.0 * Agent::RANGE).round() as f32,
-			title: "Simulation of a game of tag".to_string(),
-			vsync: true,
-			resizable: false,
-			..Default::default()
-		})
-		.add_plugins(DefaultPlugins)
-		.add_event::<WorldSnapshot>()
-		.insert_resource(Bounds::from(bounds))
-		.insert_resource(initial_snapshot)
-		.insert_resource(snapshot_receiver)
-		.add_startup_system(setup.system())
-		.add_system(world_update_event_system.system())
-		.add_system(agent_update_system.system())
-		.run();
+	// NOTE: winit (which is used by bevy) requires it's main loop to run on the main thread!
+	// That's why the simulation is spawned away and the Viewer runs on the main thread.
+	viewer.run();
+
+	simulation_handle.join().unwrap();
 }
