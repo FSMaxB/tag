@@ -1,4 +1,5 @@
 use crate::agent::Agent;
+use crate::behavior::DefaultBehavior;
 use crate::types::Vector;
 use crate::visualization::{agent_update_system, setup, world_update_event_system, Bounds};
 use crate::world::{World, WorldSnapshot};
@@ -42,7 +43,7 @@ fn main() {
 
 	let bounds = Vector::new(options.width, options.height);
 	let mut rng = SmallRng::from_entropy();
-	let mut world = World::random(bounds, options.agent_count, &mut rng);
+	let mut world = World::random(bounds, options.agent_count, || DefaultBehavior, &mut rng);
 
 	let (snapshot_sender, snapshot_receiver) = crossbeam::channel::bounded(1);
 	std::thread::spawn({

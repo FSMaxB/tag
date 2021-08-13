@@ -1,5 +1,5 @@
 use crate::agent::{Agent, AgentRelationShip};
-use crate::behavior::{Behavior, DefaultBehavior, Operation};
+use crate::behavior::{Behavior, Operation};
 use crate::id::Id;
 use crate::types::Vector;
 use cgmath::Deg;
@@ -8,6 +8,7 @@ use std::collections::BTreeMap;
 use std::fmt::{Display, Formatter};
 use std::sync::Mutex;
 
+/// The world where the simulated agents live in and where all the simulation happens
 pub struct World {
 	iteration: usize,
 	agents: Vec<Agent>,
@@ -19,14 +20,23 @@ pub struct World {
 }
 
 impl World {
-	pub fn random(bounds: Vector, agent_count: usize, random_generator: &mut impl Rng) -> Self {
+	/// Randomly generate agents with the behavior constructed by the given constructor
+	pub fn random<BehaviorType>(
+		bounds: Vector,
+		agent_count: usize,
+		behavior_constructor: impl Fn() -> BehaviorType,
+		random_generator: &mut impl Rng,
+	) -> Self
+	where
+		BehaviorType: Behavior + Send + Sync + 'static,
+	{
 		let agents = (0..agent_count)
 			.into_iter()
 			.map(|_| Agent::random(bounds, random_generator))
 			.collect();
 
 		let behaviors = (0..agent_count)
-			.map(|_| Box::new(DefaultBehavior) as Box<dyn Behavior + Send + Sync + 'static>)
+			.map(|_| Box::new(behavior_constructor()) as Box<dyn Behavior + Send + Sync + 'static>)
 			.collect();
 
 		let it = random_generator.gen_range(0..agent_count).into();
