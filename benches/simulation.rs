@@ -2,7 +2,9 @@ use bencher::Bencher;
 use bencher::{benchmark_group, benchmark_main};
 use rand::rngs::SmallRng;
 use rand::SeedableRng;
-use tag::behavior::{Behavior, DefaultBehavior};
+
+use tag::behavior::default::DefaultBehavior;
+use tag::behavior::Behavior;
 use tag::types::Vector;
 use tag::world::World;
 
