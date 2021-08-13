@@ -14,6 +14,7 @@ This project is written in rust, see [how to install rust](https://www.rust-lang
 To build, run `cargo build --release`. To run the simulation run `cargo run --release`.
 
 The simulation is quite configurable. See `cargo run --release -- --help`:
+(Note that by default the simulation is slowed down a lot in order to make the visualization more interesting)
 ```
 tag simulation 0.1.0
 Simulating a game of tag.
