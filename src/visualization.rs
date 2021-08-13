@@ -8,8 +8,8 @@ use bevy::asset::{AssetServer, Assets, Handle};
 use bevy::ecs::prelude::{Commands, IntoSystem, Query, Res};
 use bevy::math::{Quat, Vec2, Vec3};
 use bevy::prelude::{
-	Color, GlobalTransform, OrthographicCameraBundle, ResMut, Sprite, SpriteBundle, Text, TextBundle, Transform,
-	UiCameraBundle, WindowDescriptor,
+	Color, OrthographicCameraBundle, ResMut, Sprite, SpriteBundle, Text, TextBundle, Transform, UiCameraBundle,
+	WindowDescriptor,
 };
 use bevy::sprite::ColorMaterial;
 use bevy::text::{TextSection, TextStyle};
@@ -146,10 +146,6 @@ fn setup(
 				transform: Transform {
 					translation: translation_for_agent(&bounds, agent),
 					rotation: Quat::from_rotation_z(agent.heading.0 as f32),
-					..Default::default()
-				},
-				global_transform: GlobalTransform {
-					translation: Vec2::new(-10_000.0, -10_000.0).extend(0.0),
 					..Default::default()
 				},
 				..Default::default()
