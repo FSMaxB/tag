@@ -25,7 +25,7 @@ struct Options {
 	height: f64,
 	/// Number of players
 	#[structopt(long, default_value = "10")]
-	agent_count: usize,
+	agent_count: u32,
 	/// Behavior to use for the agents (default or chasing)
 	#[structopt(long, default_value = "default")]
 	behavior: BehaviorOption,

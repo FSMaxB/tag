@@ -6,6 +6,7 @@ use cgmath::Deg;
 use rand::Rng;
 use rayon::iter::{IndexedParallelIterator, IntoParallelRefIterator, IntoParallelRefMutIterator, ParallelIterator};
 use std::collections::BTreeMap;
+use std::convert::TryFrom;
 use std::fmt::{Display, Formatter};
 use std::sync::Mutex;
 
@@ -25,7 +26,7 @@ impl World {
 	/// Randomly generate agents with the behavior constructed by the given constructor
 	pub fn random<BehaviorType>(
 		bounds: Vector,
-		agent_count: usize,
+		agent_count: u32,
 		behavior_constructor: impl Fn() -> BehaviorType,
 		simulate_in_parallel: bool,
 		random_generator: &mut impl Rng,
@@ -72,7 +73,7 @@ impl World {
 				.zip(behaviors)
 				.enumerate()
 				.map(|(index, (agent, behavior))| {
-					self.simulate_agent(Id::from(index), agent.clone(), behavior.as_mut())
+					self.simulate_agent(Id::try_from(index).unwrap(), agent.clone(), behavior.as_mut())
 				})
 				.collect::<Vec<_>>()
 		} else {
@@ -83,7 +84,7 @@ impl World {
 				.zip(behaviors)
 				.enumerate()
 				.map(|(index, (agent, behavior))| {
-					self.simulate_agent(Id::from(index), agent.clone(), behavior.as_mut())
+					self.simulate_agent(Id::try_from(index).unwrap(), agent.clone(), behavior.as_mut())
 				})
 				.collect::<Vec<_>>()
 		};
@@ -155,7 +156,7 @@ impl Display for World {
 			.agents
 			.iter()
 			.enumerate()
-			.map(|(index, agent)| (Id::from(index), agent))
+			.map(|(index, agent)| (Id::try_from(index).unwrap(), agent))
 		{
 			writeln!(
 				formatter,
@@ -214,7 +215,7 @@ impl<'world> WorldView<'world> {
 			.agents
 			.iter()
 			.enumerate()
-			.map(|(other_id, other_agent)| (Id::from(other_id), self.agent.relate_to(other_agent)))
+			.map(|(other_id, other_agent)| (Id::try_from(other_id).unwrap(), self.agent.relate_to(other_agent)))
 			.filter(|(other_id, relationship)| (self.viewed_by != *other_id) && relationship.is_visible())
 			.collect();
 
