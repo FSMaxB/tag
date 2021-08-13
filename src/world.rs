@@ -4,6 +4,7 @@ use crate::id::Id;
 use crate::types::Vector;
 use cgmath::Deg;
 use rand::Rng;
+use rayon::iter::{IndexedParallelIterator, IntoParallelRefIterator, IntoParallelRefMutIterator, ParallelIterator};
 use std::collections::BTreeMap;
 use std::fmt::{Display, Formatter};
 use std::sync::Mutex;
@@ -17,6 +18,7 @@ pub struct World {
 	it: Id,
 	previous_it: Id,
 	next_it: Mutex<Option<Id>>,
+	simulate_in_parallel: bool,
 }
 
 impl World {
@@ -25,6 +27,7 @@ impl World {
 		bounds: Vector,
 		agent_count: usize,
 		behavior_constructor: impl Fn() -> BehaviorType,
+		simulate_in_parallel: bool,
 		random_generator: &mut impl Rng,
 	) -> Self
 	where
@@ -48,6 +51,7 @@ impl World {
 			it,
 			previous_it: it,
 			next_it: Default::default(),
+			simulate_in_parallel,
 		}
 	}
 
@@ -59,14 +63,30 @@ impl World {
 	/// Run one single step of the simulation
 	pub fn simulate_step(&mut self) {
 		let mut behaviors_guard = self.behaviors.lock().expect("Lock was poisoned");
-		let behaviors = behaviors_guard.iter_mut();
-		let agents = self.agents.iter();
 
-		let next_agents = agents
-			.zip(behaviors)
-			.enumerate()
-			.map(|(index, (agent, behavior))| self.simulate_agent(Id::from(index), agent.clone(), behavior.as_mut()))
-			.collect::<Vec<_>>();
+		let next_agents = if self.simulate_in_parallel {
+			let behaviors = behaviors_guard.par_iter_mut();
+			let agents = self.agents.par_iter();
+
+			agents
+				.zip(behaviors)
+				.enumerate()
+				.map(|(index, (agent, behavior))| {
+					self.simulate_agent(Id::from(index), agent.clone(), behavior.as_mut())
+				})
+				.collect::<Vec<_>>()
+		} else {
+			let behaviors = behaviors_guard.iter_mut();
+			let agents = self.agents.iter();
+
+			agents
+				.zip(behaviors)
+				.enumerate()
+				.map(|(index, (agent, behavior))| {
+					self.simulate_agent(Id::from(index), agent.clone(), behavior.as_mut())
+				})
+				.collect::<Vec<_>>()
+		};
 
 		self.agents = next_agents;
 		if let Some(next_it) = self.next_it.lock().expect("Lock was poisoned").take() {

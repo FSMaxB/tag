@@ -19,11 +19,12 @@ tag simulation 0.1.0
 Simulating a game of tag.
 
 USAGE:
-    tag [OPTIONS] [iterations]
+    tag [FLAGS] [OPTIONS] [iterations]
 
 FLAGS:
-    -h, --help       Prints help information
-    -V, --version    Prints version information
+    -h, --help        Prints help information
+        --parallel    Run the simulation in parallel using rayon
+    -V, --version     Prints version information
 
 OPTIONS:
         --agent-count <agent-count>                  Number of players [default: 20]
@@ -43,8 +44,14 @@ Performance benchmarks can be run using `cargo bench`
 
 For future reference on my machine:
 ```
-test default_behavior_100_000_agents ... bench:  12,540,808 ns/iter (+/- 8,041,112)
-test default_behavior_10_000_agents  ... bench:   1,130,749 ns/iter (+/- 275,085)
-test default_behavior_10_agents      ... bench:         928 ns/iter (+/- 20)
-test default_behavior_1_000_agents   ... bench:     109,691 ns/iter (+/- 9,442)
+test default_behavior_100_000_agents            ... bench:  12,380,506 ns/iter (+/- 8,067,514)
+test default_behavior_10_000_agents             ... bench:   1,128,749 ns/iter (+/- 385,808)
+test default_behavior_10_agents                 ... bench:         936 ns/iter (+/- 15)
+test default_behavior_1_000_000_agents          ... bench: 138,170,848 ns/iter (+/- 104,803,666)
+test default_behavior_1_000_agents              ... bench:     109,020 ns/iter (+/- 10,222)
+test parallel_default_behavior_100_000_agents   ... bench:  16,499,372 ns/iter (+/- 15,378,497)
+test parallel_default_behavior_10_000_agents    ... bench:   1,828,926 ns/iter (+/- 1,055,200)
+test parallel_default_behavior_10_agents        ... bench:      80,341 ns/iter (+/- 9,110)
+test parallel_default_behavior_1_000_000_agents ... bench: 125,112,921 ns/iter (+/- 90,776,675)
+test parallel_default_behavior_1_000_agents     ... bench:     143,614 ns/iter (+/- 66,550)
 ```

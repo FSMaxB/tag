@@ -31,6 +31,9 @@ struct Options {
 	/// How should the simulation be displayed (visual or command-line)
 	#[structopt(long, default_value = "visual")]
 	viewer: ViewerOption,
+	/// Run the simulation in parallel using rayon
+	#[structopt(long)]
+	parallel: bool,
 }
 
 #[derive(Debug, StructOpt)]
@@ -57,7 +60,13 @@ fn main() {
 
 	let bounds = Vector::new(options.width, options.height);
 	let mut rng = SmallRng::from_entropy();
-	let mut world = World::random(bounds, options.agent_count, || DefaultBehavior, &mut rng);
+	let mut world = World::random(
+		bounds,
+		options.agent_count,
+		|| DefaultBehavior,
+		options.parallel,
+		&mut rng,
+	);
 
 	let viewer = match options.viewer {
 		ViewerOption::Visual => Arc::new(BevyViewer::new(bounds)) as Arc<dyn Viewer>,
