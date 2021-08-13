@@ -240,6 +240,6 @@ impl<'world> WorldView<'world> {
 			.map(|(&id, relationship)| (id, relationship.clone()))
 			.collect();
 		self.reachable_agents = Some(reachable_agents);
-		self.visible_agents.as_ref().unwrap() // save because we just set it
+		self.reachable_agents.as_ref().unwrap() // save because we just set it
 	}
 }
