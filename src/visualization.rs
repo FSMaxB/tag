@@ -16,7 +16,6 @@ use bevy::text::{TextSection, TextStyle};
 use bevy::ui::{AlignSelf, Style};
 use bevy::DefaultPlugins;
 use crossbeam::channel::{Receiver, Sender};
-use std::convert::TryFrom;
 
 /// Viewer implementation that does a graphical representation of the agents by using the bevy game engine
 pub struct BevyViewer {
@@ -137,7 +136,7 @@ fn setup(
 	commands.insert_resource(color_materials);
 
 	for (index, agent) in initial_snapshot.agents.iter().enumerate() {
-		let id = Id::try_from(index).unwrap();
+		let id = Id::from(index);
 		commands
 			.spawn_bundle(SpriteBundle {
 				sprite: Sprite {

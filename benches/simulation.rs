@@ -89,7 +89,7 @@ fn parallel_chasing_behavior_1_000_000_agents(bench: &mut Bencher) {
 	bench_with_random_world::<ChasingBehavior>(bench, 1_000_000, true);
 }
 
-fn bench_with_random_world<BehaviorType>(bench: &mut Bencher, agent_count: u32, parallel: bool)
+fn bench_with_random_world<BehaviorType>(bench: &mut Bencher, agent_count: usize, parallel: bool)
 where
 	BehaviorType: Behavior + Default + Send + Sync + 'static,
 {
