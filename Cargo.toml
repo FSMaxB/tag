@@ -19,6 +19,7 @@ structopt = "0.3"
 bevy = {version = "0.5", default_features = false, features = ["render", "x11", "wayland", "bevy_winit", "bevy_wgpu"]}
 crossbeam = "0.8"
 rayon = "1"
+jemallocator-global = "0.3"
 
 [dev-dependencies]
 bencher = "0.1"
