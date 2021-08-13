@@ -187,7 +187,7 @@ mod test {
 				),
 			heading: Zero::zero(),
 		};
-		assert!(looking_agent.can_see(&in_view));
+		assert!(looking_agent.can_see(&just_in_view));
 	}
 
 	#[test]

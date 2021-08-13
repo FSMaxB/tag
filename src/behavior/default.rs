@@ -12,6 +12,7 @@ use crate::world::WorldView;
 /// If the agent is "it", it targets the nearest visible agent and walks towards it.
 ///
 /// Since this behavior doesn't hold any state, it's quite erratic.
+#[derive(Default)]
 pub struct DefaultBehavior;
 
 impl Behavior for DefaultBehavior {

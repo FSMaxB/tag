@@ -4,7 +4,8 @@ use std::str::FromStr;
 use std::sync::Arc;
 use std::time::Duration;
 use structopt::StructOpt;
-use tag::behavior::DefaultBehavior;
+use tag::behavior::chasing::ChasingBehavior;
+use tag::behavior::default::DefaultBehavior;
 use tag::types::Vector;
 use tag::viewer::{CommandlineViewer, Viewer};
 use tag::visualization::BevyViewer;
@@ -23,8 +24,11 @@ struct Options {
 	#[structopt(long, default_value = "500")]
 	height: f64,
 	/// Number of players
-	#[structopt(long, default_value = "20")]
+	#[structopt(long, default_value = "10")]
 	agent_count: usize,
+	/// Behavior to use for the agents (default or chasing)
+	#[structopt(long, default_value = "default")]
+	behavior: BehaviorOption,
 	/// Milliseconds to wait between every iteration
 	#[structopt(long, default_value = "50")]
 	delay_milliseconds: u64,
@@ -55,18 +59,47 @@ impl FromStr for ViewerOption {
 	}
 }
 
+#[derive(Debug, StructOpt)]
+enum BehaviorOption {
+	Default,
+	Chasing,
+}
+
+impl FromStr for BehaviorOption {
+	type Err = String;
+
+	fn from_str(text: &str) -> Result<Self, Self::Err> {
+		use BehaviorOption::*;
+		match text {
+			"default" => Ok(Default),
+			"chasing" => Ok(Chasing),
+			_ => Err(format!("Invalid behavior option: {}", text)),
+		}
+	}
+}
+
 fn main() {
 	let options = Options::from_args();
 
 	let bounds = Vector::new(options.width, options.height);
 	let mut rng = SmallRng::from_entropy();
-	let mut world = World::random(
-		bounds,
-		options.agent_count,
-		|| DefaultBehavior,
-		options.parallel,
-		&mut rng,
-	);
+
+	let mut world = match options.behavior {
+		BehaviorOption::Default => World::random(
+			bounds,
+			options.agent_count,
+			DefaultBehavior::default,
+			options.parallel,
+			&mut rng,
+		),
+		BehaviorOption::Chasing => World::random(
+			bounds,
+			options.agent_count,
+			ChasingBehavior::default,
+			options.parallel,
+			&mut rng,
+		),
+	};
 
 	let viewer = match options.viewer {
 		ViewerOption::Visual => Arc::new(BevyViewer::new(bounds)) as Arc<dyn Viewer>,
