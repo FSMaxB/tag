@@ -27,7 +27,10 @@ FLAGS:
     -V, --version     Prints version information
 
 OPTIONS:
-        --agent-count <agent-count>                  Number of players [default: 20]
+        --agent-count <agent-count>                  Number of players [default: 10]
+        --behavior <behavior>
+            Behavior to use for the agents (default or chasing) [default: default]
+
         --delay-milliseconds <delay-milliseconds>    Milliseconds to wait between every iteration [default: 50]
         --height <height>                            Height of the playing field [default: 500]
         --viewer <viewer>
@@ -44,14 +47,24 @@ Performance benchmarks can be run using `cargo bench`
 
 For future reference on my machine:
 ```
-test default_behavior_100_000_agents            ... bench:  12,380,506 ns/iter (+/- 8,067,514)
-test default_behavior_10_000_agents             ... bench:   1,128,749 ns/iter (+/- 385,808)
-test default_behavior_10_agents                 ... bench:         936 ns/iter (+/- 15)
-test default_behavior_1_000_000_agents          ... bench: 138,170,848 ns/iter (+/- 104,803,666)
-test default_behavior_1_000_agents              ... bench:     109,020 ns/iter (+/- 10,222)
-test parallel_default_behavior_100_000_agents   ... bench:  16,499,372 ns/iter (+/- 15,378,497)
-test parallel_default_behavior_10_000_agents    ... bench:   1,828,926 ns/iter (+/- 1,055,200)
-test parallel_default_behavior_10_agents        ... bench:      80,341 ns/iter (+/- 9,110)
-test parallel_default_behavior_1_000_000_agents ... bench: 125,112,921 ns/iter (+/- 90,776,675)
-test parallel_default_behavior_1_000_agents     ... bench:     143,614 ns/iter (+/- 66,550)
+test chasing_behavior_100_000_agents            ... bench:  12,213,090 ns/iter (+/- 5,137,575)
+test chasing_behavior_10_000_agents             ... bench:   1,179,828 ns/iter (+/- 216,664)
+test chasing_behavior_10_agents                 ... bench:         933 ns/iter (+/- 18)
+test chasing_behavior_1_000_000_agents          ... bench: 135,015,578 ns/iter (+/- 42,425,187)
+test chasing_behavior_1_000_agents              ... bench:     117,653 ns/iter (+/- 8,732)
+test default_behavior_100_000_agents            ... bench:  12,110,455 ns/iter (+/- 3,850,531)
+test default_behavior_10_000_agents             ... bench:   1,159,781 ns/iter (+/- 173,682)
+test default_behavior_10_agents                 ... bench:         944 ns/iter (+/- 9)
+test default_behavior_1_000_000_agents          ... bench: 129,858,261 ns/iter (+/- 37,898,892)
+test default_behavior_1_000_agents              ... bench:     113,517 ns/iter (+/- 10,534)
+test parallel_chasing_behavior_100_000_agents   ... bench:  16,496,709 ns/iter (+/- 6,227,487)
+test parallel_chasing_behavior_10_000_agents    ... bench:   1,900,720 ns/iter (+/- 478,826)
+test parallel_chasing_behavior_10_agents        ... bench:      83,388 ns/iter (+/- 9,865)
+test parallel_chasing_behavior_1_000_000_agents ... bench: 109,885,259 ns/iter (+/- 60,851,419)
+test parallel_chasing_behavior_1_000_agents     ... bench:     169,563 ns/iter (+/- 59,042)
+test parallel_default_behavior_100_000_agents   ... bench:  15,582,245 ns/iter (+/- 8,051,149)
+test parallel_default_behavior_10_000_agents    ... bench:   1,813,907 ns/iter (+/- 528,551)
+test parallel_default_behavior_10_agents        ... bench:      79,939 ns/iter (+/- 6,214)
+test parallel_default_behavior_1_000_000_agents ... bench: 114,913,075 ns/iter (+/- 42,818,895)
+test parallel_default_behavior_1_000_agents     ... bench:     151,408 ns/iter (+/- 50,883)
 ```
