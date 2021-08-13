@@ -178,6 +178,16 @@ mod test {
 			heading: Zero::zero(),
 		};
 		assert!(looking_agent.can_see(&in_view));
+
+		let just_in_view = Agent {
+			position: center
+				+ rotate_by_angle(
+					Vector::unit_x(),
+					looking_agent.heading + (Agent::FIELD_OF_VIEW_ANGLE / 2.0) - Rad(0.1),
+				),
+			heading: Zero::zero(),
+		};
+		assert!(looking_agent.can_see(&in_view));
 	}
 
 	#[test]
