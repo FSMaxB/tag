@@ -209,6 +209,7 @@ impl<'world> WorldView<'world> {
 			return self.visible_agents.as_ref().unwrap();
 		}
 
+		let mut reachable_agents = BTreeMap::new();
 		// Optimisation opportunities:
 		// 1. Reuse the storage location for the result
 		// 2. One loop for both reachable and visible agents.
@@ -219,8 +220,14 @@ impl<'world> WorldView<'world> {
 			.enumerate()
 			.map(|(other_id, other_agent)| (Id::from(other_id), self.agent.relate_to(other_agent)))
 			.filter(|(other_id, relationship)| (self.viewed_by != *other_id) && relationship.is_visible())
+			.inspect(|(id, relationship)| {
+				if relationship.is_reachable() {
+					reachable_agents.insert(*id, relationship.clone());
+				}
+			})
 			.collect();
 
+		self.reachable_agents = Some(reachable_agents);
 		self.visible_agents = Some(visible_agents);
 		self.visible_agents.as_ref().unwrap() // save because we just set it
 	}
@@ -233,13 +240,7 @@ impl<'world> WorldView<'world> {
 			return self.reachable_agents.as_ref().unwrap();
 		}
 
-		let reachable_agents = self
-			.visible_agents()
-			.iter()
-			.filter(|(_, relationship)| relationship.is_reachable())
-			.map(|(&id, relationship)| (id, relationship.clone()))
-			.collect();
-		self.reachable_agents = Some(reachable_agents);
-		self.reachable_agents.as_ref().unwrap() // save because we just set it
+		self.visible_agents(); // this also fills the reachable agents
+		self.reachable_agents.as_ref().unwrap() // save because it was just set
 	}
 }
