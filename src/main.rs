@@ -5,6 +5,7 @@ use crate::visualization::BevyViewer;
 use crate::world::World;
 use rand::rngs::SmallRng;
 use rand::SeedableRng;
+use std::str::FromStr;
 use std::sync::Arc;
 use std::time::Duration;
 use structopt::StructOpt;
@@ -35,9 +36,28 @@ struct Options {
 	/// Milliseconds to wait between every iteration
 	#[structopt(long, default_value = "50")]
 	delay_milliseconds: u64,
-	/// Use this flag to disable the graphical visualization
-	#[structopt(long = "no-visualize", parse(from_flag = std::ops::Not::not))]
-	visualize: bool,
+	/// How should the simulation be displayed (visual or command-line)
+	#[structopt(long, default_value = "visual")]
+	viewer: ViewerOption,
+}
+
+#[derive(Debug, StructOpt)]
+enum ViewerOption {
+	Visual,
+	CommandLine,
+}
+
+impl FromStr for ViewerOption {
+	type Err = String;
+
+	fn from_str(text: &str) -> Result<Self, Self::Err> {
+		use ViewerOption::*;
+		match text {
+			"visual" => Ok(Visual),
+			"command-line" => Ok(CommandLine),
+			_ => Err(format!("Invalid viewer option: {}", text)),
+		}
+	}
 }
 
 fn main() {
@@ -47,10 +67,9 @@ fn main() {
 	let mut rng = SmallRng::from_entropy();
 	let mut world = World::random(bounds, options.agent_count, || DefaultBehavior, &mut rng);
 
-	let viewer = if options.visualize {
-		Arc::new(BevyViewer::new(bounds)) as Arc<dyn Viewer>
-	} else {
-		Arc::new(CommandlineViewer::default()) as Arc<dyn Viewer>
+	let viewer = match options.viewer {
+		ViewerOption::Visual => Arc::new(BevyViewer::new(bounds)) as Arc<dyn Viewer>,
+		ViewerOption::CommandLine => Arc::new(CommandlineViewer::default()) as Arc<dyn Viewer>,
 	};
 
 	let simulation_handle = std::thread::spawn({
