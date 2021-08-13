@@ -14,6 +14,7 @@ use bevy::sprite::ColorMaterial;
 use bevy::text::{TextSection, TextStyle};
 use bevy::ui::{AlignSelf, Style};
 
+/// Bounds of the [`World`]. This wrapper is required for storing it as a resource in `bevy`
 pub struct Bounds(Vec2);
 
 impl From<Vector> for Bounds {
@@ -22,13 +23,15 @@ impl From<Vector> for Bounds {
 	}
 }
 
-// No idea if this is how to do things, but I haven't found another way.
-pub struct ColorMaterials {
+/// Type to combine the [`ColorMaterial`]s to be used for agents.
+/// This type is injected into `bevy` as a resource.
+pub struct AgentColors {
 	regular: Handle<ColorMaterial>,
 	it: Handle<ColorMaterial>,
 	previous_it: Handle<ColorMaterial>,
 }
 
+/// Sets up the entities and resource for the visualization.
 pub fn setup(
 	mut commands: Commands,
 	initial_snapshot: Res<WorldSnapshot>,
@@ -58,7 +61,7 @@ pub fn setup(
 		..Default::default()
 	});
 
-	let color_materials = ColorMaterials {
+	let color_materials = AgentColors {
 		regular: materials.add(Color::BLACK.into()),
 		it: materials.add(Color::RED.into()),
 		previous_it: materials.add(Color::GREEN.into()),
@@ -91,6 +94,8 @@ pub fn setup(
 	commands.remove_resource::<WorldSnapshot>();
 }
 
+/// Checks every frame if a new [`WorldSnapshot`] is available to be displayed
+/// and if so, sends it out as an event.
 pub fn world_update_event_system(
 	receiver: Res<crossbeam::channel::Receiver<WorldSnapshot>>,
 	mut event_writer: EventWriter<WorldSnapshot>,
@@ -103,12 +108,14 @@ pub fn world_update_event_system(
 	event_writer.send(latest_snapshot);
 }
 
+/// On every new [`WorldSnapshot`] event, updates the entities visualizing the
+/// agents and updates the text which displays the current iteration.
 pub fn agent_update_system(
 	mut event_reader: EventReader<WorldSnapshot>,
 	mut agent_query: Query<(&mut Transform, &mut Handle<ColorMaterial>, &Id)>,
 	mut text_query: Query<&mut Text>,
 	bounds: Res<Bounds>,
-	color_materials: Res<ColorMaterials>,
+	color_materials: Res<AgentColors>,
 ) {
 	let latest_snapshot = match event_reader.iter().last() {
 		Some(snapshot) => snapshot,

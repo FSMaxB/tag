@@ -3,6 +3,11 @@ use cgmath::{Angle, InnerSpace, MetricSpace, Rad, Zero};
 use rand::Rng;
 use std::f64::consts::PI;
 
+/// Low level type that represents the state of an agent in the world and
+/// combines the calculation to relate different agents to another.
+///
+/// This is a strict value type that represents a snapshot. Once an agent moves,
+/// a new value is constructed.
 #[derive(Clone)]
 pub struct Agent {
 	pub position: Vector,
@@ -14,6 +19,7 @@ impl Agent {
 	pub const FIELD_OF_VIEW_ANGLE: Radians = Rad((200.0 / 180.0) * PI);
 	/// How far an agent is allowed to move in one time step.
 	pub const MAXIMUM_VELOCITY: f64 = 5.0;
+	/// How far an agent can reach
 	pub const RANGE: f64 = 10.0;
 
 	pub fn random(bounds: Vector, random_generator: &mut impl Rng) -> Self {

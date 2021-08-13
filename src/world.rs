@@ -51,10 +51,12 @@ impl World {
 		}
 	}
 
+	/// Which iteration step the world is in
 	pub fn iteration(&self) -> usize {
 		self.iteration
 	}
 
+	/// Run one single step of the simulation
 	pub fn simulate_step(&mut self) {
 		let mut behaviors_guard = self.behaviors.lock().expect("Lock was poisoned");
 		let behaviors = behaviors_guard.iter_mut();
@@ -74,6 +76,7 @@ impl World {
 		self.iteration += 1;
 	}
 
+	/// Simulate one single agent
 	fn simulate_agent(&self, id: Id, agent: Agent, behavior: &mut dyn Behavior) -> Agent {
 		let mut world_view = self.world_view(id, agent);
 		let Operation {
@@ -93,6 +96,16 @@ impl World {
 		world_view.agent.perform_movement(self.bounds, velocity, direction)
 	}
 
+	fn world_view(&self, id: Id, agent: Agent) -> WorldView {
+		WorldView {
+			world: self,
+			viewed_by: id,
+			agent,
+			visible_agents: None,
+			reachable_agents: None,
+		}
+	}
+
 	/// Snapshots the world as it is right now.
 	pub fn snapshot(&self) -> WorldSnapshot {
 		// Optimization opportunity: Update existing snapshot instead of creating a new one
@@ -101,16 +114,6 @@ impl World {
 			iteration: self.iteration,
 			it: self.it,
 			previous_it: self.previous_it,
-		}
-	}
-
-	fn world_view(&self, id: Id, agent: Agent) -> WorldView {
-		WorldView {
-			world: self,
-			viewed_by: id,
-			agent,
-			visible_agents: None,
-			reachable_agents: None,
 		}
 	}
 }
@@ -125,6 +128,7 @@ pub struct WorldSnapshot {
 
 impl Display for World {
 	fn fmt(&self, formatter: &mut Formatter) -> std::fmt::Result {
+		writeln!(formatter, "Iteration: {}", self.iteration)?;
 		writeln!(formatter, "Bounds: {:.2}x{:.2}", self.bounds.x, self.bounds.y)?;
 		writeln!(formatter, "It: {}, previously: {}", self.it, self.previous_it)?;
 		for (id, agent) in self
@@ -147,6 +151,7 @@ impl Display for World {
 	}
 }
 
+/// A view of the given World, but restricted to the perspective of one single Agent
 pub struct WorldView<'world> {
 	world: &'world World,
 	viewed_by: Id,
@@ -156,18 +161,28 @@ pub struct WorldView<'world> {
 }
 
 impl<'world> WorldView<'world> {
+	/// [`Id`] of the viewing agent
 	pub fn our_id(&self) -> Id {
 		self.viewed_by
 	}
 
+	/// [`Agent`] of the viewing agent
+	pub fn our_agent(&self) -> &Agent {
+		&self.agent
+	}
+
+	/// [`Id`] of the agent that is "it"
 	pub fn current_it(&self) -> Id {
 		self.world.it
 	}
 
+	/// [`Id`] of the agent that was "it" previously
 	pub fn previous_it(&self) -> Id {
 		self.world.previous_it
 	}
 
+	/// Collects a collection of Agents that are visible from the perspective of the viewing Agent.
+	/// The data is collected only once and then cached.
 	pub fn visible_agents(&mut self) -> &BTreeMap<Id, AgentRelationShip> {
 		if self.visible_agents.is_some() {
 			// FIXME: if let Some() would be better, but I can't get the borrow checker to agree with me here
@@ -190,6 +205,8 @@ impl<'world> WorldView<'world> {
 		self.visible_agents.as_ref().unwrap() // save because we just set it
 	}
 
+	/// Collects a collection of Agents that are reachable from the perspective of the viewing Agent.
+	/// The data is collected only once and then cached.
 	pub fn reachable_agents(&mut self) -> &BTreeMap<Id, AgentRelationShip> {
 		if self.reachable_agents.is_some() {
 			// FIXME: if let Some() would be better, but I can't get the borrow checker to agree with me here
@@ -204,9 +221,5 @@ impl<'world> WorldView<'world> {
 			.collect();
 		self.reachable_agents = Some(reachable_agents);
 		self.visible_agents.as_ref().unwrap() // save because we just set it
-	}
-
-	pub fn our_agent(&self) -> &Agent {
-		&self.agent
 	}
 }

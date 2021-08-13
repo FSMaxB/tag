@@ -6,19 +6,24 @@ use cgmath::Deg;
 use rand::{thread_rng, Rng};
 use static_assertions::assert_obj_safe;
 
-#[derive(Copy, Clone)]
-pub enum Role {
-	It,
-	NotIt,
-}
-
+/// This trait needs to be implemented to give an Agent a Behavior.
+/// The [`WorldView`] is the agent's window into the world upon which it can make decisions.
+/// The [`Operation`] for that step is then just returned.
+///
+/// A [`Behavior`] can hold internal state (see the `&mut self`). During a simulation, there
+/// is exactly one instance of a [`Behavior`] per agent.
 pub trait Behavior {
 	fn perform_step(&mut self, world_view: &mut WorldView) -> Operation;
 }
 
+/// Operation to be performed by an agent in a simulation step
 pub struct Operation {
+	/// Direction to move in.
 	pub direction: Radians,
+	/// Velocity to move with. This is automatically capped to the maximum allowed velocity.
 	pub velocity: f64,
+	/// Which [`Id`] to tag. This is ignored if the agent performing the operation is not "it"
+	/// or if the tagged [`Id`] belongs to the previous "it"
 	pub tag: Option<Id>,
 }
 
@@ -26,6 +31,12 @@ pub struct Operation {
 // arbitrary behaviors, so dynamic dispatch is required
 assert_obj_safe!(Behavior);
 
+/// Initial "stupid" default behavior for testing purposes.
+/// If the agent is not "it", it runs around randomly with a tendency to go right
+/// (so as to not get stuck at the edges).
+/// If the agent is "it", it targets the nearest visible agent and walks towards it.
+///
+/// Since this behavior doesn't hold any state, it's quite erratic.
 pub struct DefaultBehavior;
 
 impl Behavior for DefaultBehavior {
