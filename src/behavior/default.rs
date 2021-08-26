@@ -2,7 +2,7 @@ use cgmath::Deg;
 use rand::{thread_rng, Rng};
 
 use crate::agent::Agent;
-use crate::behavior::{Behavior, Operation};
+use crate::behavior::{catch_reachable, Behavior, Operation};
 use crate::types::Radians;
 use crate::world::WorldView;
 
@@ -32,17 +32,12 @@ impl Behavior for DefaultBehavior {
 		}
 
 		// We're it! See if we can catch somebody
-		let previous_it = world_view.previous_it();
-		if let Some((&taggable_id, _)) = world_view.reachable_agents().iter().find(|(&id, _)| id != previous_it) {
-			// Tag the first reachable agent and run away
-			return Operation {
-				direction: our_agent.heading + random_angle,
-				velocity: Agent::MAXIMUM_VELOCITY,
-				tag: Some(taggable_id),
-			};
+		if let Some(operation) = catch_reachable(world_view, our_agent.heading + random_angle) {
+			return operation;
 		}
 
 		// Nobody is reachable, see who's nearest
+		let previous_it = world_view.previous_it();
 		if let Some((_, nearest)) = world_view
 			.visible_agents()
 			.iter()

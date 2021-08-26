@@ -1,6 +1,6 @@
 use crate::agent::Agent;
 use crate::behavior::default::DefaultBehavior;
-use crate::behavior::{Behavior, Operation};
+use crate::behavior::{catch_reachable, Behavior, Operation};
 use crate::id::Id;
 use crate::types::Radians;
 use crate::world::WorldView;
@@ -28,15 +28,8 @@ impl Behavior for ChasingBehavior {
 		}
 
 		// we're "it", is somebody near enough to tag?
-		if let Some((&taggable_id, _)) = world_view.reachable_agents().iter().find(|(&id, _)| id != previous_it) {
-			self.chasing = None;
-
-			// Tag the first reachable agent and run away
-			return Operation {
-				direction: our_agent.heading + random_angle,
-				velocity: Agent::MAXIMUM_VELOCITY,
-				tag: Some(taggable_id),
-			};
+		if let Some(operation) = catch_reachable(world_view, our_agent.heading + random_angle) {
+			return operation;
 		}
 
 		// Are we chasing someone and is that person visible? If so, keep chasing!
