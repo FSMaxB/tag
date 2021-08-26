@@ -1,5 +1,6 @@
 use static_assertions::assert_obj_safe;
 
+use crate::agent::Agent;
 use crate::id::Id;
 use crate::types::Radians;
 use crate::world::WorldView;
@@ -31,3 +32,19 @@ pub struct Operation {
 // This trait must stay object safe because the simulation engine needs to support
 // arbitrary behaviors, so dynamic dispatch is required
 assert_obj_safe!(Behavior);
+
+pub(crate) fn catch_reachable(world_view: &mut WorldView, runaway_direction: Radians) -> Option<Operation> {
+	let previous_it = world_view.previous_it();
+	world_view
+		.reachable_agents()
+		.iter()
+		.find(|(&id, _)| id != previous_it)
+		.map(|(&taggable_id, _)| {
+			// Tag the first reachable agent and run away
+			Operation {
+				direction: runaway_direction,
+				velocity: Agent::MAXIMUM_VELOCITY,
+				tag: Some(taggable_id),
+			}
+		})
+}
