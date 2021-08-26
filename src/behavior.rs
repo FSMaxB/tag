@@ -7,6 +7,7 @@ use crate::world::WorldView;
 
 pub mod chasing;
 pub mod default;
+pub mod runaway;
 
 /// This trait needs to be implemented to give an Agent a Behavior.
 /// The [`WorldView`] is the agent's window into the world upon which it can make decisions.
