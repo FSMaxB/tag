@@ -1,6 +1,6 @@
 use crate::agent::Agent;
 use crate::behavior::default::DefaultBehavior;
-use crate::behavior::{catch_reachable, Behavior, Operation};
+use crate::behavior::{catch_reachable, chase_nearest, Behavior, Operation};
 use crate::id::Id;
 use crate::types::Radians;
 use crate::world::WorldView;
@@ -20,7 +20,6 @@ impl Behavior for ChasingBehavior {
 		let random_angle = Radians::from(Deg(10.0)) * (thread_rng().gen_range(-1i8..=2) as f32);
 
 		let it = world_view.current_it();
-		let previous_it = world_view.previous_it();
 		let our_id = world_view.our_id();
 		let our_agent = world_view.our_agent().clone();
 		if it != our_id {
@@ -44,20 +43,9 @@ impl Behavior for ChasingBehavior {
 		}
 
 		// Nobody is reachable or being chased, see who's nearest
-		if let Some((&nearest_id, nearest)) = world_view
-			.visible_agents()
-			.iter()
-			.filter(|(&id, _)| id != previous_it)
-			.min_by(|(_, a), (_, b)| a.distance.partial_cmp(&b.distance).expect("Invalid distance"))
-		{
+		if let Some((operation, nearest_id)) = chase_nearest(world_view) {
 			self.chasing = Some(nearest_id);
-
-			// chase the nearest
-			return Operation {
-				direction: our_agent.heading + nearest.direction,
-				velocity: Agent::MAXIMUM_VELOCITY,
-				tag: None,
-			};
+			return operation;
 		}
 
 		// Can't see anybody, turn around, maybe we see someone
