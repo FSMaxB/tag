@@ -48,3 +48,23 @@ pub(crate) fn catch_reachable(world_view: &mut WorldView, runaway_direction: Rad
 			}
 		})
 }
+
+pub(crate) fn chase_nearest(world_view: &mut WorldView) -> Option<(Operation, Id)> {
+	let heading = world_view.our_agent().heading;
+	let previous_it = world_view.previous_it();
+	world_view
+		.visible_agents()
+		.iter()
+		.filter(|(&id, _)| id != previous_it)
+		.min_by(|(_, a), (_, b)| a.distance.partial_cmp(&b.distance).expect("Invalid distance"))
+		.map(|(&nearest_id, nearest)| {
+			(
+				Operation {
+					direction: heading + nearest.direction,
+					velocity: Agent::MAXIMUM_VELOCITY,
+					tag: None,
+				},
+				nearest_id,
+			)
+		})
+}

@@ -2,7 +2,7 @@ use cgmath::Deg;
 use rand::{thread_rng, Rng};
 
 use crate::agent::Agent;
-use crate::behavior::{catch_reachable, Behavior, Operation};
+use crate::behavior::{catch_reachable, chase_nearest, Behavior, Operation};
 use crate::types::Radians;
 use crate::world::WorldView;
 
@@ -37,19 +37,8 @@ impl Behavior for DefaultBehavior {
 		}
 
 		// Nobody is reachable, see who's nearest
-		let previous_it = world_view.previous_it();
-		if let Some((_, nearest)) = world_view
-			.visible_agents()
-			.iter()
-			.filter(|(&id, _)| id != previous_it)
-			.min_by(|(_, a), (_, b)| a.distance.partial_cmp(&b.distance).expect("Invalid distance"))
-		{
-			// chase the nearest
-			return Operation {
-				direction: our_agent.heading + nearest.direction,
-				velocity: Agent::MAXIMUM_VELOCITY,
-				tag: None,
-			};
+		if let Some((operation, _)) = chase_nearest(world_view) {
+			return operation;
 		}
 
 		// Can't see anybody, turn around, maybe we see someone
