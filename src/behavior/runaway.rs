@@ -7,7 +7,34 @@ use rand::{thread_rng, Rng};
 
 /// Almost the same as [`DefaultBehavior`], just that it tries to run away from "it".
 #[derive(Default)]
-pub struct RunawayBehavior;
+pub struct RunawayBehavior {
+	runaway_direction: Option<RunawayDirection>,
+}
+
+enum RunawayDirection {
+	Left,
+	Right,
+}
+
+impl RunawayDirection {
+	fn random() -> RunawayDirection {
+		use RunawayDirection::*;
+		if thread_rng().gen_bool(0.5) {
+			Left
+		} else {
+			Right
+		}
+	}
+
+	fn angle(&self) -> Radians {
+		use RunawayDirection::*;
+		match self {
+			Left => Deg(90.0),
+			Right => Deg(-90.0),
+		}
+		.into()
+	}
+}
 
 impl Behavior for RunawayBehavior {
 	fn perform_step(&mut self, world_view: &mut WorldView) -> Operation {
@@ -18,7 +45,7 @@ impl Behavior for RunawayBehavior {
 
 		if world_view.our_id() != world_view.current_it() {
 			// run away if we see "it"
-			if let Some(operation) = run_away(world_view) {
+			if let Some(operation) = self.run_away(world_view) {
 				return operation;
 			}
 
@@ -49,16 +76,22 @@ impl Behavior for RunawayBehavior {
 	}
 }
 
-fn run_away(world_view: &mut WorldView) -> Option<Operation> {
-	if world_view.our_id() == world_view.previous_it() {
-		return None;
-	}
+impl RunawayBehavior {
+	fn run_away(&mut self, world_view: &mut WorldView) -> Option<Operation> {
+		if world_view.our_id() == world_view.previous_it() {
+			return None;
+		}
 
-	let it = world_view.current_it();
-	// is "it" visible?
-	world_view.visible_agents().get(&it).map(|it_relationship| Operation {
-		direction: it_relationship.direction + Radians::from(Deg(90.0)),
-		velocity: Agent::MAXIMUM_VELOCITY,
-		tag: None,
-	})
+		let runaway_angle = self
+			.runaway_direction
+			.get_or_insert_with(RunawayDirection::random)
+			.angle();
+		let it = world_view.current_it();
+		// is "it" visible?
+		world_view.visible_agents().get(&it).map(|it_relationship| Operation {
+			direction: it_relationship.direction + runaway_angle,
+			velocity: Agent::MAXIMUM_VELOCITY,
+			tag: None,
+		})
+	}
 }
