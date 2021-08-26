@@ -2,7 +2,7 @@ use std::fmt::{Display, Formatter};
 use std::ops::Index;
 
 /// Opaque [`Id`] of an agent. This also gets used as an index into the array of agents in the [`World`]
-#[derive(Clone, Copy, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialOrd, Ord, PartialEq, Eq, Hash)]
 pub struct Id(usize);
 
 impl Display for Id {

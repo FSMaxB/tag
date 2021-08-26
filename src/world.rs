@@ -5,7 +5,7 @@ use crate::types::Vector;
 use cgmath::Deg;
 use rand::Rng;
 use rayon::iter::{IndexedParallelIterator, IntoParallelRefIterator, IntoParallelRefMutIterator, ParallelIterator};
-use std::collections::BTreeMap;
+use std::collections::HashMap;
 use std::fmt::{Display, Formatter};
 use std::sync::Mutex;
 
@@ -176,8 +176,8 @@ pub struct WorldView<'world> {
 	world: &'world World,
 	viewed_by: Id,
 	agent: Agent,
-	visible_agents: Option<BTreeMap<Id, AgentRelationShip>>,
-	reachable_agents: Option<BTreeMap<Id, AgentRelationShip>>,
+	visible_agents: Option<HashMap<Id, AgentRelationShip>>,
+	reachable_agents: Option<HashMap<Id, AgentRelationShip>>,
 }
 
 impl<'world> WorldView<'world> {
@@ -203,7 +203,7 @@ impl<'world> WorldView<'world> {
 
 	/// Collects a collection of Agents that are visible from the perspective of the viewing Agent.
 	/// The data is collected only once and then cached.
-	pub fn visible_agents(&mut self) -> &BTreeMap<Id, AgentRelationShip> {
+	pub fn visible_agents(&mut self) -> &HashMap<Id, AgentRelationShip> {
 		if self.visible_agents.is_some() {
 			// FIXME: if let Some() would be better, but I can't get the borrow checker to agree with me here
 			return self.visible_agents.as_ref().unwrap();
@@ -224,7 +224,7 @@ impl<'world> WorldView<'world> {
 
 	/// Collects a collection of Agents that are reachable from the perspective of the viewing Agent.
 	/// The data is collected only once and then cached.
-	pub fn reachable_agents(&mut self) -> &BTreeMap<Id, AgentRelationShip> {
+	pub fn reachable_agents(&mut self) -> &HashMap<Id, AgentRelationShip> {
 		if self.reachable_agents.is_some() {
 			// FIXME: if let Some() would be better, but I can't get the borrow checker to agree with me here
 			return self.reachable_agents.as_ref().unwrap();
