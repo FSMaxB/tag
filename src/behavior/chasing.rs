@@ -33,12 +33,8 @@ impl Behavior for ChasingBehavior {
 
 		// Are we chasing someone and is that person visible? If so, keep chasing!
 		if let Some(chased_id) = self.chasing {
-			if let Some((_, chased)) = world_view.visible_agents().iter().find(|(&id, _)| id == chased_id) {
-				return Operation {
-					direction: our_agent.heading + chased.direction,
-					velocity: Agent::MAXIMUM_VELOCITY,
-					tag: None,
-				};
+			if let Some(operation) = chase_id(world_view, chased_id) {
+				return operation;
 			}
 		}
 
@@ -55,4 +51,17 @@ impl Behavior for ChasingBehavior {
 			tag: None,
 		}
 	}
+}
+
+fn chase_id(world_view: &mut WorldView, chased: Id) -> Option<Operation> {
+	let heading = world_view.our_agent().heading;
+	world_view
+		.visible_agents()
+		.iter()
+		.find(|(&id, _)| id == chased)
+		.map(|(_, chased)| Operation {
+			direction: heading + chased.direction,
+			velocity: Agent::MAXIMUM_VELOCITY,
+			tag: None,
+		})
 }
