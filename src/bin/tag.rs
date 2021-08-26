@@ -6,6 +6,7 @@ use std::time::Duration;
 use structopt::StructOpt;
 use tag::behavior::chasing::ChasingBehavior;
 use tag::behavior::default::DefaultBehavior;
+use tag::behavior::runaway::RunawayBehavior;
 use tag::types::Vector;
 use tag::viewer::{CommandlineViewer, Viewer};
 use tag::visualization::BevyViewer;
@@ -26,7 +27,7 @@ struct Options {
 	/// Number of players
 	#[structopt(long, default_value = "10")]
 	agent_count: usize,
-	/// Behavior to use for the agents (default or chasing)
+	/// Behavior to use for the agents (default, chasing or runaway)
 	#[structopt(long, default_value = "default")]
 	behavior: BehaviorOption,
 	/// Milliseconds to wait between every iteration
@@ -63,6 +64,7 @@ impl FromStr for ViewerOption {
 enum BehaviorOption {
 	Default,
 	Chasing,
+	Runaway,
 }
 
 impl FromStr for BehaviorOption {
@@ -73,6 +75,7 @@ impl FromStr for BehaviorOption {
 		match text {
 			"default" => Ok(Default),
 			"chasing" => Ok(Chasing),
+			"runaway" => Ok(Runaway),
 			_ => Err(format!("Invalid behavior option: {}", text)),
 		}
 	}
@@ -96,6 +99,13 @@ fn main() {
 			bounds,
 			options.agent_count,
 			ChasingBehavior::default,
+			options.parallel,
+			&mut rng,
+		),
+		BehaviorOption::Runaway => World::random(
+			bounds,
+			options.agent_count,
+			RunawayBehavior::default,
 			options.parallel,
 			&mut rng,
 		),
