@@ -2,9 +2,8 @@ use crate::agent::Agent;
 use crate::behavior::default::DefaultBehavior;
 use crate::behavior::{catch_reachable, chase_nearest, Behavior, Operation};
 use crate::id::Id;
-use crate::types::Radians;
+use crate::types::degrees_to_radians;
 use crate::world::WorldView;
-use cgmath::Deg;
 use rand::{thread_rng, Rng};
 
 /// Almost the same as [`DefaultBehavior`], just that it remembers which agent it was chasing
@@ -17,7 +16,7 @@ pub struct ChasingBehavior {
 impl Behavior for ChasingBehavior {
 	fn perform_step(&mut self, world_view: &mut WorldView) -> Operation {
 		// more likely to go right
-		let random_angle = Radians::from(Deg(10.0)) * (thread_rng().gen_range(-1i8..=2) as f32);
+		let random_angle = degrees_to_radians(10.0 * (thread_rng().gen_range(-1i8..=2) as f32));
 
 		let it = world_view.current_it();
 		let our_id = world_view.our_id();

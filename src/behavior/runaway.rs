@@ -1,8 +1,7 @@
 use crate::agent::Agent;
 use crate::behavior::{catch_reachable, chase_nearest, Behavior, Operation};
-use crate::types::Radians;
+use crate::types::{degrees_to_radians, Radians};
 use crate::world::WorldView;
-use cgmath::Deg;
 use rand::{thread_rng, Rng};
 
 /// Almost the same as [`DefaultBehavior`], just that it tries to run away from "it".
@@ -29,8 +28,8 @@ impl RunawayDirection {
 	fn angle(&self) -> Radians {
 		use RunawayDirection::*;
 		match self {
-			Left => Deg(90.0),
-			Right => Deg(-90.0),
+			Left => degrees_to_radians(90.0),
+			Right => degrees_to_radians(-90.0),
 		}
 		.into()
 	}
@@ -41,7 +40,7 @@ impl Behavior for RunawayBehavior {
 		let our_agent = world_view.our_agent().clone();
 
 		// more likely to go right
-		let random_angle = Radians::from(Deg(10.0)) * (thread_rng().gen_range(-1i8..=2) as f32);
+		let random_angle = degrees_to_radians(10.0 * (thread_rng().gen_range(-1i8..=2) as f32));
 
 		if world_view.our_id() != world_view.current_it() {
 			// run away if we see "it"
@@ -69,7 +68,7 @@ impl Behavior for RunawayBehavior {
 
 		// Can't see anybody, turn around, maybe we see someone
 		Operation {
-			direction: our_agent.heading + Radians::from(Deg(20.0)),
+			direction: our_agent.heading + degrees_to_radians(20.0),
 			velocity: 0.0,
 			tag: None,
 		}

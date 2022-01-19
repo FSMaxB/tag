@@ -1,26 +1,26 @@
-use cgmath::num_traits::real::Real;
-use cgmath::{Basis2, Deg, Rad, Rotation, Rotation2, Vector2};
+use bevy::math::{Mat2, Vec2};
+use std::f32::consts::PI;
 
-pub type Vector = Vector2<f32>;
-pub type Radians = Rad<f32>;
+pub type Vector = Vec2;
+pub type Radians = f32;
 
-pub trait Absolute {
-	fn abs(&self) -> Self;
+pub fn rotate_by_angle(vector: Vector, angle: Radians) -> Vector {
+	Mat2::from_angle(angle).mul_vec2(vector)
 }
 
-impl<Number: Real> Absolute for Rad<Number> {
-	fn abs(&self) -> Self {
-		Rad(self.0.abs())
+pub fn degrees_to_radians(amount: f32) -> Radians {
+	(amount / 180.0) * PI
+}
+
+pub fn radians_to_degrees(amount: f32) -> f32 {
+	(amount * 360.0) / (2.0 * PI)
+}
+
+pub fn normalize_radians(angle: f32) -> f32 {
+	let remainder = angle % (2.0 * PI);
+	if remainder < 0.0 {
+		remainder + 2.0 * PI
+	} else {
+		remainder
 	}
-}
-
-impl<Number: Real> Absolute for Deg<Number> {
-	fn abs(&self) -> Self {
-		Deg(self.0.abs())
-	}
-}
-
-pub fn rotate_by_angle(vector: Vector, angle: impl Into<Radians>) -> Vector {
-	let rotation: Basis2<_> = Rotation2::from_angle(angle);
-	rotation.rotate_vector(vector)
 }

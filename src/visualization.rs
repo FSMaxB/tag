@@ -145,7 +145,7 @@ fn setup(
 				},
 				transform: Transform {
 					translation: translation_for_agent(&bounds, agent),
-					rotation: Quat::from_rotation_z(agent.heading.0 as f32),
+					rotation: Quat::from_rotation_z(agent.heading),
 					..Default::default()
 				},
 				..Default::default()
@@ -192,7 +192,7 @@ fn agent_update_system(
 	for (mut transform, mut material, &id) in agent_query.iter_mut() {
 		let agent = &latest_snapshot.agents[id];
 		transform.translation = translation_for_agent(&bounds, agent);
-		transform.rotation = Quat::from_rotation_z(agent.heading.0 as f32);
+		transform.rotation = Quat::from_rotation_z(agent.heading);
 
 		if id == latest_snapshot.it {
 			*material = color_materials.it.clone();

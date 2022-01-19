@@ -1,8 +1,7 @@
 use crate::agent::{Agent, AgentRelationShip};
 use crate::behavior::{Behavior, Operation};
 use crate::id::Id;
-use crate::types::Vector;
-use cgmath::Deg;
+use crate::types::{radians_to_degrees, Vector};
 use rand::Rng;
 use rayon::iter::{IndexedParallelIterator, IntoParallelRefIterator, IntoParallelRefMutIterator, ParallelIterator};
 use std::collections::HashMap;
@@ -163,7 +162,7 @@ impl Display for World {
 				id,
 				agent.position.x,
 				agent.position.y,
-				Deg::from(agent.heading)
+				radians_to_degrees(agent.heading),
 			)?;
 		}
 

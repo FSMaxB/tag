@@ -12,7 +12,6 @@ name = "tag"
 path = "src/bin/tag.rs"
 
 [dependencies]
-cgmath = "0.18"
 rand = {version = "0.8", features = ["small_rng"]}
 static_assertions = "1"
 structopt = "0.3"

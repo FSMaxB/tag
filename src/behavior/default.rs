@@ -1,9 +1,8 @@
-use cgmath::Deg;
 use rand::{thread_rng, Rng};
 
 use crate::agent::Agent;
 use crate::behavior::{catch_reachable, chase_nearest, Behavior, Operation};
-use crate::types::Radians;
+use crate::types::degrees_to_radians;
 use crate::world::WorldView;
 
 /// Initial "stupid" default behavior for testing purposes.
@@ -20,7 +19,7 @@ impl Behavior for DefaultBehavior {
 		let our_agent = world_view.our_agent().clone();
 
 		// more likely to go right
-		let random_angle = Radians::from(Deg(10.0)) * (thread_rng().gen_range(-1i8..=2) as f32);
+		let random_angle = degrees_to_radians(10.0 * (thread_rng().gen_range(-1i8..=2) as f32));
 
 		if world_view.our_id() != world_view.current_it() {
 			// we're not "it", run in a random direction with full speed
@@ -43,7 +42,7 @@ impl Behavior for DefaultBehavior {
 
 		// Can't see anybody, turn around, maybe we see someone
 		Operation {
-			direction: our_agent.heading + Radians::from(Deg(20.0)),
+			direction: our_agent.heading + degrees_to_radians(20.0),
 			velocity: 0.0,
 			tag: None,
 		}
