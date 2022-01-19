@@ -55,7 +55,7 @@ impl FromStr for ViewerOption {
 		match text {
 			"visual" => Ok(Visual),
 			"command-line" => Ok(CommandLine),
-			_ => Err(format!("Invalid viewer option: {}", text)),
+			_ => Err(format!("Invalid viewer option: {text}")),
 		}
 	}
 }
@@ -76,7 +76,7 @@ impl FromStr for BehaviorOption {
 			"default" => Ok(Default),
 			"chasing" => Ok(Chasing),
 			"runaway" => Ok(Runaway),
-			_ => Err(format!("Invalid behavior option: {}", text)),
+			_ => Err(format!("Invalid behavior option: {text}")),
 		}
 	}
 }

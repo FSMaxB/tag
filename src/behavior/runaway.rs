@@ -31,7 +31,6 @@ impl RunawayDirection {
 			Left => degrees_to_radians(90.0),
 			Right => degrees_to_radians(-90.0),
 		}
-		.into()
 	}
 }
 

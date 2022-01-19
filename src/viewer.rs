@@ -39,7 +39,7 @@ impl Viewer for CommandlineViewer {
 	}
 
 	fn finished(&self, world: &World) {
-		println!("{}", world);
+		println!("{world}");
 	}
 
 	fn run(&self) {
